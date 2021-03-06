@@ -1,4 +1,4 @@
-package model
+package models
 
 import (
 	"time"
@@ -9,9 +9,9 @@ import (
 type Date struct {
 	gorm.Model
 
-	Time   time.Time
-	Note   string `json:"note"`
-	UserID string `json:"user_id"`
+	Time   time.Time `json:"time"`
+	Note   string    `json:"note"`
+	UserID uint      `json:"user_id"`
 
 	Activities []Activity `json:"activities" gorm:"foreignKey:DateID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

@@ -1,9 +1,9 @@
-package dto
+package dtos
 
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/steppbol/activity-manager/util/exception"
+	"github.com/steppbol/activity-manager/utils/exception"
 )
 
 type response struct {

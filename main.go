@@ -3,56 +3,56 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/steppbol/activity-manager/repository"
-	"github.com/steppbol/activity-manager/router"
-	"github.com/steppbol/activity-manager/service"
+	"github.com/steppbol/activity-manager/repositories"
+	"github.com/steppbol/activity-manager/routers"
+	"github.com/steppbol/activity-manager/services"
 )
 
 func main() {
-	br, err := repository.Setup()
+	br, err := repositories.Setup()
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = repository.NewActivityRepository(br)
+	_, err = repositories.NewActivityRepository(br)
 	if err != nil {
 		panic(err)
 	}
 
-	dr, err := repository.NewDateRepository(br)
+	dr, err := repositories.NewDateRepository(br)
 	if err != nil {
 		panic(err)
 	}
 
-	tr, err := repository.NewTagRepository(br)
+	tr, err := repositories.NewTagRepository(br)
 	if err != nil {
 		panic(err)
 	}
 
-	ur, err := repository.NewUserRepository(br)
+	ur, err := repositories.NewUserRepository(br)
 	if err != nil {
 		panic(err)
 	}
 
-	ts, err := service.NewTagService(tr)
+	ts, err := services.NewTagService(tr)
 	if err != nil {
 		panic(err)
 	}
 
-	us, err := service.NewUserService(ur)
+	us, err := services.NewUserService(ur)
 	if err != nil {
 		panic(err)
 	}
 
-	ds, err := service.NewDateService(dr)
+	ds, err := services.NewDateService(us, dr)
 	if err != nil {
 		panic(err)
 	}
 
 	r := gin.Default()
-	router.NewTagRouter(r, ts)
-	router.NewUserRouter(r, us)
-	router.NewDateRouter(r, ds)
+	routers.NewTagRouter(r, ts)
+	routers.NewUserRouter(r, us)
+	routers.NewDateRouter(r, ds)
 
 	err = r.Run()
 	if err != nil {

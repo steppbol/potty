@@ -1,4 +1,4 @@
-package dto
+package dtos
 
 import "time"
 
@@ -15,7 +15,12 @@ type UserUpdateRequest struct {
 type DateDTO struct {
 	Time   time.Time `json:"time" binding:"required"`
 	Note   string    `json:"note"`
-	UserID string    `json:"user_id" binding:"required"`
+	UserID uint      `json:"user_id" binding:"required"`
+}
+
+type DateUpdateRequest struct {
+	Time time.Time `json:"time" binding:"required"`
+	Note string    `json:"note"`
 }
 
 type TagDTO struct {

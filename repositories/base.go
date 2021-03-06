@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/steppbol/activity-manager/config"
+	"github.com/steppbol/activity-manager/configs"
+	"github.com/steppbol/activity-manager/models"
 )
 
 type BaseRepository struct {
@@ -15,7 +16,7 @@ type BaseRepository struct {
 }
 
 func Setup() (*BaseRepository, error) {
-	conf, err := config.GetDatabaseConfig()
+	conf, err := configs.GetDatabaseConfig()
 
 	if err != nil {
 		return nil, err
@@ -35,10 +36,10 @@ func Setup() (*BaseRepository, error) {
 		return nil, err
 	}
 
-	/*db.AutoMigrate(&model.Tag{})
-	db.AutoMigrate(&model.Activity{})
-	db.AutoMigrate(&model.Date{})
-	db.AutoMigrate(&model.User{})*/
+	db.AutoMigrate(&models.Tag{})
+	db.AutoMigrate(&models.Activity{})
+	db.AutoMigrate(&models.Date{})
+	db.AutoMigrate(&models.User{})
 
 	return &BaseRepository{
 		database: db,
