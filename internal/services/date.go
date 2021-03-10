@@ -3,8 +3,8 @@ package services
 import (
 	"time"
 
-	"github.com/steppbol/activity-manager/models"
-	"github.com/steppbol/activity-manager/repositories"
+	"github.com/steppbol/activity-manager/internal/models"
+	"github.com/steppbol/activity-manager/internal/repositories"
 )
 
 type DateService struct {

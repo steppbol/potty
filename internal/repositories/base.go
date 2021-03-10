@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/steppbol/activity-manager/configs"
-	"github.com/steppbol/activity-manager/models"
+	"github.com/steppbol/activity-manager/internal/models"
 )
 
 type BaseRepository struct {

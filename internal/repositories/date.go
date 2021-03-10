@@ -3,7 +3,7 @@ package repositories
 import (
 	"time"
 
-	"github.com/steppbol/activity-manager/models"
+	"github.com/steppbol/activity-manager/internal/models"
 )
 
 type DateRepository struct {

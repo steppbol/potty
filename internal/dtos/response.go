@@ -3,7 +3,7 @@ package dtos
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/steppbol/activity-manager/utils/exception"
+	"github.com/steppbol/activity-manager/internal/utils/exception"
 )
 
 type response struct {

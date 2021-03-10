@@ -3,7 +3,7 @@ package mapper
 import (
 	"time"
 
-	"github.com/steppbol/activity-manager/dtos"
+	"github.com/steppbol/activity-manager/internal/dtos"
 )
 
 func UserUpdateRequestToMap(ur dtos.UserUpdateRequest) *map[string]interface{} {

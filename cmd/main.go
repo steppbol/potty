@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/steppbol/activity-manager/repositories"
-	"github.com/steppbol/activity-manager/routers"
-	"github.com/steppbol/activity-manager/services"
+	"github.com/steppbol/activity-manager/internal/repositories"
+	"github.com/steppbol/activity-manager/internal/routers"
+	"github.com/steppbol/activity-manager/internal/services"
 )
 
 func main() {

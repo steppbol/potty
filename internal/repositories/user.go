@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"github.com/steppbol/activity-manager/models"
+	"github.com/steppbol/activity-manager/internal/models"
 )
 
 type UserRepository struct {
