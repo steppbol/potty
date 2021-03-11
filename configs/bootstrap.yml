@@ -4,4 +4,6 @@ database:
   user: postgres
   password: postgres
   name: sandbox
-  scheme: postgres
+  schema: postgres
+  generate-schema: false
+  ssl-mode: disable

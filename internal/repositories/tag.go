@@ -38,6 +38,14 @@ func (tr TagRepository) FindByID(id uint) (*models.Tag, error) {
 	return &tag, err
 }
 
+func (tr TagRepository) FindByAllByIDs(ids []uint) *[]models.Tag {
+	var tags []models.Tag
+
+	tr.baseRepository.database.Where("id IN (?)", ids).Find(&tags)
+
+	return &tags
+}
+
 func (tr TagRepository) FindByName(name string) (*models.Tag, error) {
 	var tag models.Tag
 

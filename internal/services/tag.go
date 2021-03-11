@@ -44,6 +44,10 @@ func (ts TagService) FindByID(id uint) (*models.Tag, error) {
 	return ts.tagRepository.FindByID(id)
 }
 
+func (ts TagService) FindAllByIDs(ids []uint) *[]models.Tag {
+	return ts.tagRepository.FindByAllByIDs(ids)
+}
+
 func (ts TagService) DeleteByID(id uint) {
 	ts.tagRepository.DeleteByID(id)
 }

@@ -14,7 +14,7 @@ func main() {
 		panic(err)
 	}
 
-	_, err = repositories.NewActivityRepository(br)
+	ar, err := repositories.NewActivityRepository(br)
 	if err != nil {
 		panic(err)
 	}
@@ -49,10 +49,16 @@ func main() {
 		panic(err)
 	}
 
+	as, err := services.NewActivityService(ds, ts, ar)
+	if err != nil {
+		panic(err)
+	}
+
 	r := gin.Default()
 	routers.NewTagRouter(r, ts)
 	routers.NewUserRouter(r, us)
 	routers.NewDateRouter(r, ds)
+	routers.NewActivityRouter(r, as)
 
 	err = r.Run()
 	if err != nil {

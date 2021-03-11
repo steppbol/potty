@@ -24,10 +24,10 @@ func Setup() (*BaseRepository, error) {
 
 	dsn := url.URL{
 		User:     url.UserPassword(conf.User, conf.Password),
-		Scheme:   conf.Scheme,
+		Scheme:   conf.Schema,
 		Host:     fmt.Sprintf("%s:%d", conf.Host, conf.Port),
 		Path:     conf.Name,
-		RawQuery: (&url.Values{"sslmode": []string{"disable"}}).Encode(),
+		RawQuery: (&url.Values{"sslmode": []string{conf.SSLMode}}).Encode(),
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn.String()), &gorm.Config{})
@@ -36,10 +36,27 @@ func Setup() (*BaseRepository, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(&models.Tag{})
-	db.AutoMigrate(&models.Activity{})
-	db.AutoMigrate(&models.Date{})
-	db.AutoMigrate(&models.User{})
+	if conf.GenerateSchema {
+		err = db.AutoMigrate(&models.Tag{})
+		if err != nil {
+			return nil, err
+		}
+
+		err = db.AutoMigrate(&models.Activity{})
+		if err != nil {
+			return nil, err
+		}
+
+		err = db.AutoMigrate(&models.Date{})
+		if err != nil {
+			return nil, err
+		}
+
+		err = db.AutoMigrate(&models.User{})
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return &BaseRepository{
 		database: db,

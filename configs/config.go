@@ -7,16 +7,18 @@ import (
 )
 
 const (
-	config = "resources/bootstrap.yml"
+	config = "./configs/bootstrap.yml"
 )
 
 type Database struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Name     string `yaml:"name"`
-	Scheme   string `yaml:"scheme"`
+	Host           string `yaml:"host"`
+	Port           int    `yaml:"port"`
+	User           string `yaml:"user"`
+	Password       string `yaml:"password"`
+	Name           string `yaml:"name"`
+	Schema         string `yaml:"schema"`
+	GenerateSchema bool   `yaml:"generate-schema"`
+	SSLMode        string `yaml:"ssl-mode"`
 }
 
 type databaseConfig struct {

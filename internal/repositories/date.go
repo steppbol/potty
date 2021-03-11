@@ -27,15 +27,15 @@ func (dr DateRepository) Update(date *models.Date, update map[string]interface{}
 func (dr DateRepository) FindAllByUserID(userId uint) *[]models.Date {
 	var dates []models.Date
 
-	dr.baseRepository.database.Where("user_id = ?", userId).Find(&dates)
+	dr.baseRepository.database.Where("user_id = ?", userId).Preload("Activities").Find(&dates)
 
 	return &dates
 }
 
-func (dr DateRepository) FindByTimeAndUserID(userId uint, time time.Time) (*models.Date, error) {
+func (dr DateRepository) FindAllByTimeAndUserID(userId uint, time time.Time) (*models.Date, error) {
 	var date models.Date
 
-	err := dr.baseRepository.database.Where("user_id = ? AND time = ?", userId, time).First(&date).Error
+	err := dr.baseRepository.database.Where("user_id = ? AND time = ?", userId, time).Preload("Activities").First(&date).Error
 
 	return &date, err
 }
@@ -43,17 +43,9 @@ func (dr DateRepository) FindByTimeAndUserID(userId uint, time time.Time) (*mode
 func (dr DateRepository) FindByID(id uint) (*models.Date, error) {
 	var date models.Date
 
-	err := dr.baseRepository.database.Where("id = ?", id).First(&date).Error
+	err := dr.baseRepository.database.Where("id = ?", id).Preload("Activities").First(&date).Error
 
 	return &date, err
-}
-
-func (dr DateRepository) FindAllActivities(id uint) *[]models.Activity {
-	var activities []models.Activity
-
-	dr.baseRepository.database.Where("id = ?", id).Find(&activities)
-
-	return &activities
 }
 
 func (dr DateRepository) DeleteByID(id uint) {

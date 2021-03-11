@@ -26,8 +26,7 @@ func NewDateRouter(r *gin.Engine, ds *services.DateService) {
 	api.POST("/dates", dr.Create)
 	api.PUT("/dates/:id", dr.Update)
 	api.GET("/dates/:id", dr.FindByID)
-	api.GET("/users/:id/dates", dr.FindByUserID)
-	api.GET("/users/:id/dates/:id2/activities", dr.FindAllActivities)
+	api.GET("/dates", dr.FindAllByUserID)
 	api.DELETE("/dates", dr.Delete)
 }
 
@@ -90,38 +89,16 @@ func (dr DateRouter) FindByID(c *gin.Context) {
 	dtos.CreateResponse(c, http.StatusOK, exception.Success, date)
 }
 
-func (dr DateRouter) FindAllActivities(c *gin.Context) {
-	uId := c.Param("id")
+func (dr DateRouter) FindAllByUserID(c *gin.Context) {
+	var input dtos.FindByUserIDRequest
 
-	cuId, err := strconv.Atoi(uId)
+	err := c.ShouldBindJSON(&input)
 	if err != nil {
 		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
-	id := c.Param("id")
-
-	cId, err := strconv.Atoi(id)
-	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
-		return
-	}
-
-	date := dr.dateService.FindAllActivities(uint(cId), uint(cuId))
-
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, date)
-}
-
-func (dr DateRouter) FindByUserID(c *gin.Context) {
-	id := c.Param("id")
-
-	cId, err := strconv.Atoi(id)
-	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
-		return
-	}
-
-	date := dr.dateService.FindAllByUserID(uint(cId))
+	date := dr.dateService.FindAllByUserID(input.UserID)
 
 	dtos.CreateResponse(c, http.StatusOK, exception.Success, date)
 }
