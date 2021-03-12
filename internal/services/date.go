@@ -57,6 +57,13 @@ func (ds DateService) DeleteByID(id uint) {
 	ds.dateRepository.DeleteByID(id)
 }
 
+func (ds DateService) ExportToXLSX() {
+
+}
+
+func (ds DateService) ImportFromXLSX() {
+}
+
 func (ds DateService) createDate(time time.Time, userId uint, note string) *models.Date {
 	return &models.Date{
 		Time:   time,
