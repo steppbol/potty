@@ -27,7 +27,7 @@ func (dr DateRepository) Update(date *models.Date, update map[string]interface{}
 func (dr DateRepository) FindAllByUserID(userId uint) *[]models.Date {
 	var dates []models.Date
 
-	dr.baseRepository.database.Where("user_id = ?", userId).Preload("Activities").Find(&dates)
+	dr.baseRepository.database.Where("user_id = ?", userId).Preload("Activities.Tags").Find(&dates)
 
 	return &dates
 }
@@ -35,7 +35,7 @@ func (dr DateRepository) FindAllByUserID(userId uint) *[]models.Date {
 func (dr DateRepository) FindAllByTimeAndUserID(userId uint, time time.Time) (*models.Date, error) {
 	var date models.Date
 
-	err := dr.baseRepository.database.Where("user_id = ? AND time = ?", userId, time).Preload("Activities").First(&date).Error
+	err := dr.baseRepository.database.Where("user_id = ? AND time = ?", userId, time).Preload("Activities.Tags").First(&date).Error
 
 	return &date, err
 }
@@ -43,7 +43,7 @@ func (dr DateRepository) FindAllByTimeAndUserID(userId uint, time time.Time) (*m
 func (dr DateRepository) FindByID(id uint) (*models.Date, error) {
 	var date models.Date
 
-	err := dr.baseRepository.database.Where("id = ?", id).Preload("Activities").First(&date).Error
+	err := dr.baseRepository.database.Where("id = ?", id).Preload("Activities.Tags").First(&date).Error
 
 	return &date, err
 }

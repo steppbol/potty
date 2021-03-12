@@ -45,3 +45,8 @@ type TagDTO struct {
 type FindByUserIDRequest struct {
 	UserID uint `json:"user_id" binding:"required"`
 }
+
+type FindByTagsRequest struct {
+	UserID uint   `json:"user_id" binding:"required"`
+	TagIDs []uint `json:"tag_ids" binding:"required"`
+}

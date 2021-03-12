@@ -1,6 +1,10 @@
 package repositories
 
-import "github.com/steppbol/activity-manager/internal/models"
+import (
+	"gorm.io/gorm/clause"
+
+	"github.com/steppbol/activity-manager/internal/models"
+)
 
 type ActivityRepository struct {
 	baseRepository *BaseRepository
@@ -23,15 +27,15 @@ func (ar ActivityRepository) Update(activity *models.Activity) {
 func (ar ActivityRepository) FindAllByUserID(userId uint) *[]models.Activity {
 	var activities []models.Activity
 
-	ar.baseRepository.database.Where("user_id = ?", userId).Preload("Tags").Find(&activities)
+	ar.baseRepository.database.Where("user_id = ?", userId).Preload(clause.Associations).Find(&activities)
 
 	return &activities
 }
 
-func (ar ActivityRepository) FindAllByTagsAndDateID(dateId uint, tagIds []uint) *[]models.Activity {
+func (ar ActivityRepository) FindAllByTagsAndUserID(userId uint, tagIds []uint) *[]models.Activity {
 	var activities []models.Activity
 
-	ar.baseRepository.database.Preload("tag_id IN (?)", tagIds).Where("date_id = ?", dateId).Find(&activities)
+	ar.baseRepository.database.Joins("JOIN dates ON dates.id = activities.date_id").Joins("JOIN activities_tags ON activities_tags.activity_id=activities.id").Where("user_id = ? AND tag_id IN (?)", userId, tagIds).Find(&activities)
 
 	return &activities
 }
@@ -39,7 +43,7 @@ func (ar ActivityRepository) FindAllByTagsAndDateID(dateId uint, tagIds []uint) 
 func (ar ActivityRepository) FindByID(id uint) (*models.Activity, error) {
 	var activity models.Activity
 
-	err := ar.baseRepository.database.Where("id = ?", id).Preload("Tags").First(&activity).Error
+	err := ar.baseRepository.database.Where("id = ?", id).Preload(clause.Associations).First(&activity).Error
 
 	return &activity, err
 }

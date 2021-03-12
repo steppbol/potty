@@ -60,7 +60,7 @@ func (as ActivityService) FindAllByUserID(userId uint) *[]models.Activity {
 }
 
 func (as ActivityService) FindAllByTags(userId uint, tagIds []uint) *[]models.Activity {
-	return as.activityRepository.FindAllByTagsAndDateID(userId, tagIds)
+	return as.activityRepository.FindAllByTagsAndUserID(userId, tagIds)
 }
 
 func (as ActivityService) DeleteByID(id uint) {

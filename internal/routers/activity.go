@@ -85,15 +85,15 @@ func (ar ActivityRouter) FindAllByUserID(c *gin.Context) {
 }
 
 func (ar ActivityRouter) FindAllByTags(c *gin.Context) {
-	id := c.Param("id")
+	var input dtos.FindByTagsRequest
 
-	cId, err := strconv.Atoi(id)
+	err := c.ShouldBindJSON(&input)
 	if err != nil {
 		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
-	activity := ar.activityService.FindAllByUserID(uint(cId))
+	activity := ar.activityService.FindAllByTags(input.UserID, input.TagIDs)
 
 	dtos.CreateResponse(c, http.StatusOK, exception.Success, activity)
 }
