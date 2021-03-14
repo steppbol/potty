@@ -10,10 +10,10 @@ type ActivityRepository struct {
 	baseRepository *BaseRepository
 }
 
-func NewActivityRepository(br *BaseRepository) (*ActivityRepository, error) {
+func NewActivityRepository(br *BaseRepository) *ActivityRepository {
 	return &ActivityRepository{
 		baseRepository: br,
-	}, nil
+	}
 }
 
 func (ar ActivityRepository) Create(activity *models.Activity) {

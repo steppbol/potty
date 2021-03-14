@@ -8,10 +8,10 @@ type UserRepository struct {
 	baseRepository *BaseRepository
 }
 
-func NewUserRepository(br *BaseRepository) (*UserRepository, error) {
+func NewUserRepository(br *BaseRepository) *UserRepository {
 	return &UserRepository{
 		baseRepository: br,
-	}, nil
+	}
 }
 
 func (ur UserRepository) Create(user *models.User) {

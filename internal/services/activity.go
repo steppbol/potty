@@ -7,24 +7,17 @@ import (
 
 type ActivityService struct {
 	activityRepository *repositories.ActivityRepository
-	dateService        *DateService
 	tagService         *TagService
 }
 
-func NewActivityService(ds *DateService, ts *TagService, ar *repositories.ActivityRepository) (*ActivityService, error) {
+func NewActivityService(ts *TagService, ar *repositories.ActivityRepository) *ActivityService {
 	return &ActivityService{
 		activityRepository: ar,
-		dateService:        ds,
 		tagService:         ts,
-	}, nil
+	}
 }
 
 func (as ActivityService) Create(title, description, content string, dateId uint, tagIds []uint) *models.Activity {
-	_, err := as.dateService.FindByID(dateId)
-	if err != nil {
-		return nil
-	}
-
 	tags := as.tagService.FindAllByIDs(tagIds)
 	activity := as.createActivity(title, description, content, dateId, *tags)
 

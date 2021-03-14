@@ -12,10 +12,14 @@ type response struct {
 	Data    interface{} `json:"data"`
 }
 
-func CreateResponse(g *gin.Context, httpCode, code int, data interface{}) {
+func CreateJSONResponse(g *gin.Context, httpCode, code int, data interface{}) {
 	g.JSON(httpCode, response{
 		Code:    code,
 		Message: exception.GetMessage(code),
 		Data:    data,
 	})
+}
+
+func CreateBinResponse(g *gin.Context, code int, data interface{}) {
+	g.XML(code, data)
 }

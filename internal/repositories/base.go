@@ -13,15 +13,10 @@ import (
 
 type BaseRepository struct {
 	database *gorm.DB
+	config   configs.Database
 }
 
-func Setup() (*BaseRepository, error) {
-	conf, err := configs.GetDatabaseConfig()
-
-	if err != nil {
-		return nil, err
-	}
-
+func Setup(conf *configs.Database) (*BaseRepository, error) {
 	dsn := url.URL{
 		User:     url.UserPassword(conf.User, conf.Password),
 		Scheme:   conf.Schema,
@@ -31,7 +26,6 @@ func Setup() (*BaseRepository, error) {
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn.String()), &gorm.Config{})
-
 	if err != nil {
 		return nil, err
 	}
@@ -60,5 +54,6 @@ func Setup() (*BaseRepository, error) {
 
 	return &BaseRepository{
 		database: db,
+		config:   *conf,
 	}, nil
 }

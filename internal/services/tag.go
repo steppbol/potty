@@ -9,10 +9,10 @@ type TagService struct {
 	tagRepository *repositories.TagRepository
 }
 
-func NewTagService(tr *repositories.TagRepository) (*TagService, error) {
+func NewTagService(tr *repositories.TagRepository) *TagService {
 	return &TagService{
 		tagRepository: tr,
-	}, nil
+	}
 }
 
 func (ts TagService) Create(name string) *models.Tag {

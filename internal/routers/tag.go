@@ -34,17 +34,17 @@ func (tr TagRouter) Create(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	tag := tr.tagService.Create(input.Name)
 	if tag == nil {
-		dtos.CreateResponse(c, http.StatusConflict, exception.Conflict, nil)
+		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
 	}
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, tag)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, tag)
 }
 
 func (tr TagRouter) Update(c *gin.Context) {
@@ -52,7 +52,7 @@ func (tr TagRouter) Update(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
@@ -60,22 +60,22 @@ func (tr TagRouter) Update(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	tag := tr.tagService.Update(uint(cId), input.Name)
 	if tag == nil {
-		dtos.CreateResponse(c, http.StatusConflict, exception.Conflict, nil)
+		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
 	}
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, tag)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, tag)
 }
 
 func (tr TagRouter) FindAll(c *gin.Context) {
 	tags := tr.tagService.FindAll()
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, tags)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, tags)
 }
 
 func (tr TagRouter) FindByID(c *gin.Context) {
@@ -83,17 +83,17 @@ func (tr TagRouter) FindByID(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	tag, err := tr.tagService.FindByID(uint(cId))
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusNotFound, exception.NotFound, nil)
+		dtos.CreateJSONResponse(c, http.StatusNotFound, exception.NotFound, nil)
 		return
 	}
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, tag)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, tag)
 }
 
 func (tr TagRouter) Delete(c *gin.Context) {
@@ -101,11 +101,11 @@ func (tr TagRouter) Delete(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	tr.tagService.DeleteByID(uint(cId))
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, nil)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }

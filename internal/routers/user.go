@@ -34,17 +34,17 @@ func (ur UserRouter) Create(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	user := ur.userService.Create(input.Username, input.Password)
 	if user == nil {
-		dtos.CreateResponse(c, http.StatusConflict, exception.Conflict, nil)
+		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
 	}
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, user)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
 
 func (ur UserRouter) Update(c *gin.Context) {
@@ -52,7 +52,7 @@ func (ur UserRouter) Update(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
@@ -60,13 +60,13 @@ func (ur UserRouter) Update(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	user := ur.userService.Update(uint(cId), *mapper.UserUpdateRequestToMap(input))
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, user)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
 
 func (ur UserRouter) FindByID(c *gin.Context) {
@@ -74,18 +74,18 @@ func (ur UserRouter) FindByID(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	user, err := ur.userService.FindByID(uint(cId))
 
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusNotFound, exception.NotFound, nil)
+		dtos.CreateJSONResponse(c, http.StatusNotFound, exception.NotFound, nil)
 		return
 	}
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, user)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
 
 func (ur UserRouter) Delete(c *gin.Context) {
@@ -93,11 +93,11 @@ func (ur UserRouter) Delete(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	ur.userService.DeleteByID(uint(cId))
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, nil)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }

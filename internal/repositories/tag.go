@@ -8,10 +8,10 @@ type TagRepository struct {
 	baseRepository *BaseRepository
 }
 
-func NewTagRepository(br *BaseRepository) (*TagRepository, error) {
+func NewTagRepository(br *BaseRepository) *TagRepository {
 	return &TagRepository{
 		baseRepository: br,
-	}, nil
+	}
 }
 
 func (tr TagRepository) Create(tag *models.Tag) {

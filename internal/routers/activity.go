@@ -35,17 +35,17 @@ func (ar ActivityRouter) Create(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	activity := ar.activityService.Create(input.Title, input.Description, input.Content, input.DateID, input.TagIDs)
 	if activity == nil {
-		dtos.CreateResponse(c, http.StatusConflict, exception.Conflict, nil)
+		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
 	}
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, activity)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, activity)
 }
 
 func (ar ActivityRouter) Update(c *gin.Context) {
@@ -53,7 +53,7 @@ func (ar ActivityRouter) Update(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
@@ -61,27 +61,27 @@ func (ar ActivityRouter) Update(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	user := ar.activityService.Update(uint(cId), *mapper.ActivityUpdateRequestToMap(input))
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, user)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
 
 func (ar ActivityRouter) FindAllByUserID(c *gin.Context) {
-	var input dtos.FindByUserIDRequest
+	var input dtos.UserIDRequest
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	activity := ar.activityService.FindAllByUserID(input.UserID)
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, activity)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, activity)
 }
 
 func (ar ActivityRouter) FindAllByTags(c *gin.Context) {
@@ -89,13 +89,13 @@ func (ar ActivityRouter) FindAllByTags(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	activity := ar.activityService.FindAllByTags(input.UserID, input.TagIDs)
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, activity)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, activity)
 }
 
 func (ar ActivityRouter) Delete(c *gin.Context) {
@@ -103,11 +103,11 @@ func (ar ActivityRouter) Delete(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	ar.activityService.DeleteByID(uint(cId))
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, nil)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }

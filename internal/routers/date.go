@@ -24,6 +24,7 @@ func NewDateRouter(r *gin.Engine, ds *services.DateService) {
 	api := r.Group("/api/v1/activity-manager")
 
 	api.POST("/dates", dr.Create)
+	api.POST("/dates/export", dr.ExportToXLSX)
 	api.PUT("/dates/:id", dr.Update)
 	api.GET("/dates/:id", dr.FindByID)
 	api.GET("/dates", dr.FindAllByUserID)
@@ -35,17 +36,35 @@ func (dr DateRouter) Create(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	date := dr.dateService.Create(input.Time, input.UserID, input.Note)
 	if date == nil {
-		dtos.CreateResponse(c, http.StatusConflict, exception.Conflict, nil)
+		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
 	}
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, date)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, date)
+}
+
+func (dr DateRouter) ExportToXLSX(c *gin.Context) {
+	var input dtos.UserIDRequest
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		return
+	}
+
+	file, err := dr.dateService.ExportToXLSX(input.UserID)
+	if err != nil {
+		dtos.CreateJSONResponse(c, http.StatusInternalServerError, exception.InternalServerError, nil)
+		return
+	}
+
+	dtos.CreateBinResponse(c, http.StatusInternalServerError, file)
 }
 
 func (dr DateRouter) Update(c *gin.Context) {
@@ -53,7 +72,7 @@ func (dr DateRouter) Update(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
@@ -61,13 +80,13 @@ func (dr DateRouter) Update(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	user := dr.dateService.Update(uint(cId), *mapper.DateUpdateRequestToMap(input))
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, user)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
 
 func (dr DateRouter) FindByID(c *gin.Context) {
@@ -75,32 +94,32 @@ func (dr DateRouter) FindByID(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	date, err := dr.dateService.FindByID(uint(cId))
 
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusNotFound, exception.NotFound, nil)
+		dtos.CreateJSONResponse(c, http.StatusNotFound, exception.NotFound, nil)
 		return
 	}
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, date)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, date)
 }
 
 func (dr DateRouter) FindAllByUserID(c *gin.Context) {
-	var input dtos.FindByUserIDRequest
+	var input dtos.UserIDRequest
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	date := dr.dateService.FindAllByUserID(input.UserID)
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, date)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, date)
 }
 
 func (dr DateRouter) Delete(c *gin.Context) {
@@ -108,11 +127,11 @@ func (dr DateRouter) Delete(c *gin.Context) {
 
 	cId, err := strconv.Atoi(id)
 	if err != nil {
-		dtos.CreateResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
 		return
 	}
 
 	dr.dateService.DeleteByID(uint(cId))
 
-	dtos.CreateResponse(c, http.StatusOK, exception.Success, nil)
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }

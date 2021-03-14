@@ -42,7 +42,7 @@ type TagDTO struct {
 	Name string `json:"name" binding:"required"`
 }
 
-type FindByUserIDRequest struct {
+type UserIDRequest struct {
 	UserID uint `json:"user_id" binding:"required"`
 }
 

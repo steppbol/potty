@@ -3,6 +3,8 @@ package services
 import (
 	"time"
 
+	"github.com/tealeg/xlsx"
+
 	"github.com/steppbol/activity-manager/internal/models"
 	"github.com/steppbol/activity-manager/internal/repositories"
 )
@@ -10,13 +12,15 @@ import (
 type DateService struct {
 	dateRepository *repositories.DateRepository
 	userService    *UserService
+	xlsxService    *XLSXService
 }
 
-func NewDateService(us *UserService, dr *repositories.DateRepository) (*DateService, error) {
+func NewDateService(us *UserService, xs *XLSXService, dr *repositories.DateRepository) *DateService {
 	return &DateService{
 		dateRepository: dr,
 		userService:    us,
-	}, nil
+		xlsxService:    xs,
+	}
 }
 
 func (ds DateService) Create(time time.Time, userId uint, note string) *models.Date {
@@ -57,11 +61,27 @@ func (ds DateService) DeleteByID(id uint) {
 	ds.dateRepository.DeleteByID(id)
 }
 
-func (ds DateService) ExportToXLSX() {
+func (ds DateService) ExportToXLSX(userId uint) (*xlsx.File, error) {
+	user, err := ds.userService.FindByID(userId)
+	if err != nil {
+		return nil, nil
+	}
 
-}
+	dates := ds.FindAllByUserID(userId)
 
-func (ds DateService) ImportFromXLSX() {
+	activities := make([]models.Activity, 0)
+
+	for i := range *dates {
+		activities = append(activities, (*dates)[i].Activities...)
+	}
+
+	tags := make(map[uint][]models.Tag)
+
+	for i := range activities {
+		tags[activities[i].ID] = activities[i].Tags
+	}
+
+	return ds.xlsxService.Export(user.Username, *dates, activities, tags)
 }
 
 func (ds DateService) createDate(time time.Time, userId uint, note string) *models.Date {

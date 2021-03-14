@@ -1,3 +1,6 @@
+application:
+  xlsx-export-path: ./export/
+
 database:
   host: 127.0.0.1
   port: 5432

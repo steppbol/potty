@@ -9,10 +9,10 @@ type UserService struct {
 	userRepository *repositories.UserRepository
 }
 
-func NewUserService(ur *repositories.UserRepository) (*UserService, error) {
+func NewUserService(ur *repositories.UserRepository) *UserService {
 	return &UserService{
 		userRepository: ur,
-	}, nil
+	}
 }
 
 func (us UserService) Create(username, password string) *models.User {

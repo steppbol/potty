@@ -10,10 +10,10 @@ type DateRepository struct {
 	baseRepository *BaseRepository
 }
 
-func NewDateRepository(br *BaseRepository) (*DateRepository, error) {
+func NewDateRepository(br *BaseRepository) *DateRepository {
 	return &DateRepository{
 		baseRepository: br,
-	}, nil
+	}
 }
 
 func (dr DateRepository) Create(activity *models.Date) {
