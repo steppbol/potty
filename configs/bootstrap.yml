@@ -8,5 +8,5 @@ database:
   password: postgres
   name: sandbox
   schema: postgres
-  generate-schema: true
+  generate-schema: false
   ssl-mode: disable
