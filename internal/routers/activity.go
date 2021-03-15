@@ -6,28 +6,28 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
-	"github.com/steppbol/activity-manager/internal/services"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 	"github.com/steppbol/activity-manager/internal/utils/mapper"
 )
 
 type ActivityRouter struct {
-	activityService *services.ActivityService
+	baseAPI *api.BaseAPI
 }
 
-func NewActivityRouter(r *gin.Engine, as *services.ActivityService) {
+func NewActivityRouter(r *gin.Engine, ba *api.BaseAPI) {
 	dr := ActivityRouter{
-		activityService: as,
+		baseAPI: ba,
 	}
 
-	api := r.Group("/api/v1/activity-manager")
+	routers := r.Group("/api/v1/activity-manager")
 
-	api.POST("/activities", dr.Create)
-	api.PUT("/activities/:id", dr.Update)
-	api.GET("/activities", dr.FindAllByUserID)
-	api.GET("/activities/tags", dr.FindAllByTags)
-	api.DELETE("/activities", dr.Delete)
+	routers.POST("/activities", dr.Create)
+	routers.PUT("/activities/:id", dr.Update)
+	routers.GET("/activities", dr.FindAllByUserID)
+	routers.GET("/activities/tags", dr.FindAllByTags)
+	routers.DELETE("/activities", dr.Delete)
 }
 
 func (ar ActivityRouter) Create(c *gin.Context) {
@@ -39,7 +39,7 @@ func (ar ActivityRouter) Create(c *gin.Context) {
 		return
 	}
 
-	activity := ar.activityService.Create(input.Title, input.Description, input.Content, input.DateID, input.TagIDs)
+	activity := ar.baseAPI.ActivityService.Create(input.Title, input.Description, input.Content, input.DateID, input.TagIDs)
 	if activity == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
@@ -65,7 +65,7 @@ func (ar ActivityRouter) Update(c *gin.Context) {
 		return
 	}
 
-	user := ar.activityService.Update(uint(cId), *mapper.ActivityUpdateRequestToMap(input))
+	user := ar.baseAPI.ActivityService.Update(uint(cId), *mapper.ActivityUpdateRequestToMap(input))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
@@ -79,7 +79,7 @@ func (ar ActivityRouter) FindAllByUserID(c *gin.Context) {
 		return
 	}
 
-	activity := ar.activityService.FindAllByUserID(input.UserID)
+	activity := ar.baseAPI.ActivityService.FindAllByUserID(input.UserID)
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, activity)
 }
@@ -93,7 +93,7 @@ func (ar ActivityRouter) FindAllByTags(c *gin.Context) {
 		return
 	}
 
-	activity := ar.activityService.FindAllByTags(input.UserID, input.TagIDs)
+	activity := ar.baseAPI.ActivityService.FindAllByTags(input.UserID, input.TagIDs)
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, activity)
 }
@@ -107,7 +107,7 @@ func (ar ActivityRouter) Delete(c *gin.Context) {
 		return
 	}
 
-	ar.activityService.DeleteByID(uint(cId))
+	ar.baseAPI.ActivityService.DeleteByID(uint(cId))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }

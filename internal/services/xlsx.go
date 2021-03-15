@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
+	"gorm.io/gorm"
 
 	"github.com/steppbol/activity-manager/configs"
 	"github.com/steppbol/activity-manager/internal/models"
@@ -196,7 +197,6 @@ func (xs XLSXService) exportTags(sheet *xlsx.Sheet, tags map[uint][]models.Tag) 
 
 func (xs XLSXService) createTags(rows *[][]string) (*map[uint][]models.Tag, error) {
 	activityTags := make(map[uint][]models.Tag)
-	tags := make([]models.Tag, 0)
 
 	for i, row := range *rows {
 		if i > 0 {
@@ -216,7 +216,15 @@ func (xs XLSXService) createTags(rows *[][]string) (*map[uint][]models.Tag, erro
 					return nil, err
 				}
 
-				activityTags[uint(activityId)] = append(tags, *tag)
+				tags := activityTags[uint(activityId)]
+
+				if tags == nil {
+					tags = make([]models.Tag, 0)
+				}
+
+				tags = append(tags, *tag)
+
+				activityTags[uint(activityId)] = tags
 			}
 		}
 	}
@@ -226,7 +234,6 @@ func (xs XLSXService) createTags(rows *[][]string) (*map[uint][]models.Tag, erro
 
 func (xs XLSXService) createActivities(rows *[][]string, tags *map[uint][]models.Tag) (*map[uint][]models.Activity, error) {
 	dateActivities := make(map[uint][]models.Activity)
-	activities := make([]models.Activity, 0)
 
 	for i, row := range *rows {
 		if i > 0 {
@@ -253,7 +260,15 @@ func (xs XLSXService) createActivities(rows *[][]string, tags *map[uint][]models
 					return nil, err
 				}
 
-				dateActivities[uint(dateId)] = append(activities, *activity)
+				activities := dateActivities[uint(dateId)]
+
+				if activities == nil {
+					activities = make([]models.Activity, 0)
+				}
+
+				activities = append(activities, *activity)
+
+				dateActivities[uint(dateId)] = activities
 			}
 		}
 	}
@@ -293,42 +308,66 @@ func (xs XLSXService) createDates(rows *[][]string, activities *map[uint][]model
 }
 
 func (xs XLSXService) createTag(data []string) (*models.Tag, error) {
+	cId, err := strconv.Atoi(data[0])
+	if err != nil {
+		return nil, err
+	}
+
 	return &models.Tag{
+		Model: gorm.Model{
+			ID: uint(cId),
+		},
 		Name: data[2],
 	}, nil
 }
 
 func (xs XLSXService) createActivity(data []string, tags *[]models.Tag) (*models.Activity, error) {
-	cId, err := strconv.Atoi(data[4])
+	cId, err := strconv.Atoi(data[0])
+	if err != nil {
+		return nil, err
+	}
+
+	dateId, err := strconv.Atoi(data[4])
 	if err != nil {
 		return nil, err
 	}
 
 	return &models.Activity{
+		Model: gorm.Model{
+			ID: uint(cId),
+		},
 		Title:       data[1],
 		Description: data[2],
 		Content:     data[3],
-		DateID:      uint(cId),
+		DateID:      uint(dateId),
 		Tags:        *tags,
 	}, nil
 }
 
 func (xs XLSXService) createDate(data []string, activities *[]models.Activity) (*models.Date, error) {
+	cId, err := strconv.Atoi(data[0])
+	if err != nil {
+		return nil, err
+	}
+
 	layout := "2006-01-02 15:04:05.999999 -0700 +03"
 	cTime, err := time.Parse(layout, data[1])
 	if err != nil {
 		return nil, err
 	}
 
-	cId, err := strconv.Atoi(data[3])
+	userId, err := strconv.Atoi(data[3])
 	if err != nil {
 		return nil, err
 	}
 
 	return &models.Date{
+		Model: gorm.Model{
+			ID: uint(cId),
+		},
 		Time:       cTime,
 		Note:       data[2],
-		UserID:     uint(cId),
+		UserID:     uint(userId),
 		Activities: *activities,
 	}, nil
 }

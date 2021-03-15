@@ -6,27 +6,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
-	"github.com/steppbol/activity-manager/internal/services"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 	"github.com/steppbol/activity-manager/internal/utils/mapper"
 )
 
 type UserRouter struct {
-	userService *services.UserService
+	baseAPI *api.BaseAPI
 }
 
-func NewUserRouter(r *gin.Engine, us *services.UserService) {
+func NewUserRouter(r *gin.Engine, ba *api.BaseAPI) {
 	ur := UserRouter{
-		userService: us,
+		baseAPI: ba,
 	}
 
-	api := r.Group("/api/v1/activity-manager")
+	routers := r.Group("/api/v1/activity-manager")
 
-	api.POST("/users", ur.Create)
-	api.PUT("/users/:id", ur.Update)
-	api.GET("/users/:id", ur.FindByID)
-	api.DELETE("/users/:id", ur.Delete)
+	routers.POST("/users", ur.Create)
+	routers.PUT("/users/:id", ur.Update)
+	routers.GET("/users/:id", ur.FindByID)
+	routers.DELETE("/users/:id", ur.Delete)
 }
 
 func (ur UserRouter) Create(c *gin.Context) {
@@ -38,7 +38,7 @@ func (ur UserRouter) Create(c *gin.Context) {
 		return
 	}
 
-	user := ur.userService.Create(input.Username, input.Password)
+	user := ur.baseAPI.UserService.Create(input.Username, input.Password)
 	if user == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
@@ -64,7 +64,7 @@ func (ur UserRouter) Update(c *gin.Context) {
 		return
 	}
 
-	user := ur.userService.Update(uint(cId), *mapper.UserUpdateRequestToMap(input))
+	user := ur.baseAPI.UserService.Update(uint(cId), *mapper.UserUpdateRequestToMap(input))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
@@ -78,7 +78,7 @@ func (ur UserRouter) FindByID(c *gin.Context) {
 		return
 	}
 
-	user, err := ur.userService.FindByID(uint(cId))
+	user, err := ur.baseAPI.UserService.FindByID(uint(cId))
 
 	if err != nil {
 		dtos.CreateJSONResponse(c, http.StatusNotFound, exception.NotFound, nil)
@@ -97,7 +97,7 @@ func (ur UserRouter) Delete(c *gin.Context) {
 		return
 	}
 
-	ur.userService.DeleteByID(uint(cId))
+	ur.baseAPI.UserService.DeleteByID(uint(cId))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }

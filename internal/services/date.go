@@ -2,7 +2,6 @@ package services
 
 import (
 	"io"
-	"os"
 	"time"
 
 	"github.com/steppbol/activity-manager/internal/models"
@@ -79,14 +78,10 @@ func (ds DateService) ExportToXLSX(userId uint) (string, error) {
 func (ds DateService) ImportFromXLSX(userId uint, r io.Reader) (*[]models.Date, error) {
 	_, err := ds.userService.FindByID(userId)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	return ds.xlsxService.Import(r)
-}
-
-func (ds DateService) DeleteStaticData(path string) error {
-	return os.Remove(path)
 }
 
 func (ds DateService) createDate(time time.Time, userId uint, note string) *models.Date {
