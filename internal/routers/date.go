@@ -25,6 +25,7 @@ func NewDateRouter(r *gin.Engine, ds *services.DateService) {
 
 	api.POST("/dates", dr.Create)
 	api.POST("/dates/export", dr.ExportToXLSX)
+	api.POST("/dates/import/:id", dr.ImportFromXLSX)
 	api.PUT("/dates/:id", dr.Update)
 	api.GET("/dates/:id", dr.FindByID)
 	api.GET("/dates", dr.FindAllByUserID)
@@ -58,13 +59,39 @@ func (dr DateRouter) ExportToXLSX(c *gin.Context) {
 		return
 	}
 
-	file, err := dr.dateService.ExportToXLSX(input.UserID)
+	path, err := dr.dateService.ExportToXLSX(input.UserID)
 	if err != nil {
 		dtos.CreateJSONResponse(c, http.StatusInternalServerError, exception.InternalServerError, nil)
 		return
 	}
 
-	dtos.CreateBinResponse(c, http.StatusInternalServerError, file)
+	dtos.CreateBinResponse(c, path)
+
+	_ = dr.dateService.DeleteStaticData(path)
+}
+
+func (dr DateRouter) ImportFromXLSX(c *gin.Context) {
+	id := c.Param("id")
+
+	cId, err := strconv.Atoi(id)
+	if err != nil {
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		return
+	}
+
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		dtos.CreateJSONResponse(c, http.StatusInternalServerError, exception.InternalServerError, nil)
+		return
+	}
+
+	dates, err := dr.dateService.ImportFromXLSX(uint(cId), file)
+	if err != nil {
+		dtos.CreateJSONResponse(c, http.StatusInternalServerError, exception.InternalServerError, nil)
+		return
+	}
+
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, dates)
 }
 
 func (dr DateRouter) Update(c *gin.Context) {

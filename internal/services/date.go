@@ -1,9 +1,9 @@
 package services
 
 import (
+	"io"
+	"os"
 	"time"
-
-	"github.com/tealeg/xlsx"
 
 	"github.com/steppbol/activity-manager/internal/models"
 	"github.com/steppbol/activity-manager/internal/repositories"
@@ -53,6 +53,10 @@ func (ds DateService) FindAllByUserID(userId uint) *[]models.Date {
 	return ds.dateRepository.FindAllByUserID(userId)
 }
 
+func (ds DateService) FindAllByUserIDAndNotDeleted(userId uint) *[]models.Date {
+	return ds.dateRepository.FindAllByUserIDAndNotDeleted(userId)
+}
+
 func (ds DateService) FindByID(id uint) (*models.Date, error) {
 	return ds.dateRepository.FindByID(id)
 }
@@ -61,27 +65,28 @@ func (ds DateService) DeleteByID(id uint) {
 	ds.dateRepository.DeleteByID(id)
 }
 
-func (ds DateService) ExportToXLSX(userId uint) (*xlsx.File, error) {
+func (ds DateService) ExportToXLSX(userId uint) (string, error) {
 	user, err := ds.userService.FindByID(userId)
+	if err != nil {
+		return "", nil
+	}
+
+	dates := ds.FindAllByUserIDAndNotDeleted(userId)
+
+	return ds.xlsxService.Export(user.Username, *dates)
+}
+
+func (ds DateService) ImportFromXLSX(userId uint, r io.Reader) (*[]models.Date, error) {
+	_, err := ds.userService.FindByID(userId)
 	if err != nil {
 		return nil, nil
 	}
 
-	dates := ds.FindAllByUserID(userId)
+	return ds.xlsxService.Import(r)
+}
 
-	activities := make([]models.Activity, 0)
-
-	for i := range *dates {
-		activities = append(activities, (*dates)[i].Activities...)
-	}
-
-	tags := make(map[uint][]models.Tag)
-
-	for i := range activities {
-		tags[activities[i].ID] = activities[i].Tags
-	}
-
-	return ds.xlsxService.Export(user.Username, *dates, activities, tags)
+func (ds DateService) DeleteStaticData(path string) error {
+	return os.Remove(path)
 }
 
 func (ds DateService) createDate(time time.Time, userId uint, note string) *models.Date {

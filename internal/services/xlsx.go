@@ -2,8 +2,11 @@ package services
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 	"time"
+
+	"github.com/360EntSecGroup-Skylar/excelize/v2"
 
 	"github.com/steppbol/activity-manager/configs"
 	"github.com/steppbol/activity-manager/internal/models"
@@ -25,42 +28,94 @@ func NewXLSXService(conf *configs.Application) *XLSXService {
 	}
 }
 
-func (xs XLSXService) Export(username string, dates []models.Date, activities []models.Activity, tags map[uint][]models.Tag) (*xlsx.File, error) {
+func (xs XLSXService) Export(username string, dates []models.Date) (string, error) {
+	activities := make([]models.Activity, 0)
+
+	for i := range dates {
+		activities = append(activities, dates[i].Activities...)
+	}
+
+	tags := make(map[uint][]models.Tag)
+
+	for i := range activities {
+		tags[activities[i].ID] = activities[i].Tags
+	}
+
 	file := xlsx.NewFile()
 	dSheet, err := file.AddSheet("Dates")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	xs.exportDates(dSheet, dates)
 
 	aSheet, err := file.AddSheet("Activities")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	xs.exportActivities(aSheet, activities)
 
 	tSheet, err := file.AddSheet("Tags")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	xs.exportTags(tSheet, tags)
 
 	currTime := strconv.Itoa(int(time.Now().Unix()))
 	filename := username + currTime + xlsxExtension
+	path := xs.config.XLSXExportPath + filename
 
-	err = file.Save(xs.config.XLSXExportPath + filename)
+	err = file.Save(path)
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
+}
+
+func (xs XLSXService) Import(r io.Reader) (*[]models.Date, error) {
+	file, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
 	}
 
-	return file, nil
+	rows, err := file.GetRows("Tags")
+	if err != nil {
+		return nil, err
+	}
+
+	tags, err := xs.createTags(&rows)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err = file.GetRows("Activities")
+	if err != nil {
+		return nil, err
+	}
+
+	activities, err := xs.createActivities(&rows, tags)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err = file.GetRows("Dates")
+	if err != nil {
+		return nil, err
+	}
+
+	dates, err := xs.createDates(&rows, activities)
+	if err != nil {
+		return nil, err
+	}
+
+	return dates, nil
 }
 
 func (xs XLSXService) exportDates(sheet *xlsx.Sheet, dates []models.Date) {
-	titles := []string{"ID", "CreatedAt", "UpdatedAt", "DeletedAt", "Time", "Note", "UserID"}
+	titles := []string{"ID", "Time", "Note", "UserID"}
 
 	row := sheet.AddRow()
 	var cell *xlsx.Cell
@@ -72,9 +127,6 @@ func (xs XLSXService) exportDates(sheet *xlsx.Sheet, dates []models.Date) {
 	for i := range dates {
 		values := []string{
 			fmt.Sprintf("%d", dates[i].ID),
-			dates[i].CreatedAt.String(),
-			dates[i].UpdatedAt.String(),
-			dates[i].DeletedAt.Time.String(),
 			dates[i].Time.String(),
 			dates[i].Note,
 			fmt.Sprintf("%d", dates[i].UserID),
@@ -89,7 +141,7 @@ func (xs XLSXService) exportDates(sheet *xlsx.Sheet, dates []models.Date) {
 }
 
 func (xs XLSXService) exportActivities(sheet *xlsx.Sheet, activities []models.Activity) {
-	titles := []string{"ID", "CreatedAt", "UpdatedAt", "DeletedAt", "Title", "Description", "Content", "DateID"}
+	titles := []string{"ID", "Title", "Description", "Content", "DateID"}
 
 	row := sheet.AddRow()
 	var cell *xlsx.Cell
@@ -101,9 +153,6 @@ func (xs XLSXService) exportActivities(sheet *xlsx.Sheet, activities []models.Ac
 	for i := range activities {
 		values := []string{
 			fmt.Sprintf("%d", activities[i].ID),
-			activities[i].CreatedAt.String(),
-			activities[i].UpdatedAt.String(),
-			activities[i].DeletedAt.Time.String(),
 			activities[i].Title,
 			activities[i].Description,
 			activities[i].Content,
@@ -119,7 +168,7 @@ func (xs XLSXService) exportActivities(sheet *xlsx.Sheet, activities []models.Ac
 }
 
 func (xs XLSXService) exportTags(sheet *xlsx.Sheet, tags map[uint][]models.Tag) {
-	titles := []string{"ID", "ActivityID", "CreatedAt", "UpdatedAt", "DeletedAt", "Name"}
+	titles := []string{"ID", "ActivityID", "Name"}
 
 	row := sheet.AddRow()
 	var cell *xlsx.Cell
@@ -133,9 +182,6 @@ func (xs XLSXService) exportTags(sheet *xlsx.Sheet, tags map[uint][]models.Tag) 
 			values := []string{
 				fmt.Sprintf("%d", v[i].ID),
 				fmt.Sprintf("%d", k),
-				v[i].CreatedAt.String(),
-				v[i].UpdatedAt.String(),
-				v[i].DeletedAt.Time.String(),
 				v[i].Name,
 			}
 
@@ -146,4 +192,143 @@ func (xs XLSXService) exportTags(sheet *xlsx.Sheet, tags map[uint][]models.Tag) 
 			}
 		}
 	}
+}
+
+func (xs XLSXService) createTags(rows *[][]string) (*map[uint][]models.Tag, error) {
+	activityTags := make(map[uint][]models.Tag)
+	tags := make([]models.Tag, 0)
+
+	for i, row := range *rows {
+		if i > 0 {
+			var data []string
+			for ir := range row {
+				data = append(data, row[ir])
+			}
+
+			if len(data) > 0 {
+				activityId, err := strconv.Atoi(data[1])
+				if err != nil {
+					return nil, err
+				}
+
+				tag, err := xs.createTag(data)
+				if err != nil {
+					return nil, err
+				}
+
+				activityTags[uint(activityId)] = append(tags, *tag)
+			}
+		}
+	}
+
+	return &activityTags, nil
+}
+
+func (xs XLSXService) createActivities(rows *[][]string, tags *map[uint][]models.Tag) (*map[uint][]models.Activity, error) {
+	dateActivities := make(map[uint][]models.Activity)
+	activities := make([]models.Activity, 0)
+
+	for i, row := range *rows {
+		if i > 0 {
+			var data []string
+			for ir := range row {
+				data = append(data, row[ir])
+			}
+
+			if len(data) > 0 {
+				dateId, err := strconv.Atoi(data[4])
+				if err != nil {
+					return nil, err
+				}
+
+				activityId, err := strconv.Atoi(data[0])
+				if err != nil {
+					return nil, err
+				}
+
+				aTags := (*tags)[uint(activityId)]
+
+				activity, err := xs.createActivity(data, &aTags)
+				if err != nil {
+					return nil, err
+				}
+
+				dateActivities[uint(dateId)] = append(activities, *activity)
+			}
+		}
+	}
+
+	return &dateActivities, nil
+}
+
+func (xs XLSXService) createDates(rows *[][]string, activities *map[uint][]models.Activity) (*[]models.Date, error) {
+	dates := make([]models.Date, 0)
+
+	for i, row := range *rows {
+		if i > 0 {
+			var data []string
+			for ir := range row {
+				data = append(data, row[ir])
+			}
+
+			if len(data) > 0 {
+				dateId, err := strconv.Atoi(data[0])
+				if err != nil {
+					return nil, err
+				}
+
+				dActivities := (*activities)[uint(dateId)]
+
+				date, err := xs.createDate(data, &dActivities)
+				if err != nil {
+					return nil, err
+				}
+
+				dates = append(dates, *date)
+			}
+		}
+	}
+
+	return &dates, nil
+}
+
+func (xs XLSXService) createTag(data []string) (*models.Tag, error) {
+	return &models.Tag{
+		Name: data[2],
+	}, nil
+}
+
+func (xs XLSXService) createActivity(data []string, tags *[]models.Tag) (*models.Activity, error) {
+	cId, err := strconv.Atoi(data[4])
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Activity{
+		Title:       data[1],
+		Description: data[2],
+		Content:     data[3],
+		DateID:      uint(cId),
+		Tags:        *tags,
+	}, nil
+}
+
+func (xs XLSXService) createDate(data []string, activities *[]models.Activity) (*models.Date, error) {
+	layout := "2006-01-02 15:04:05.999999 -0700 +03"
+	cTime, err := time.Parse(layout, data[1])
+	if err != nil {
+		return nil, err
+	}
+
+	cId, err := strconv.Atoi(data[3])
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Date{
+		Time:       cTime,
+		Note:       data[2],
+		UserID:     uint(cId),
+		Activities: *activities,
+	}, nil
 }

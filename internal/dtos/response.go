@@ -20,6 +20,6 @@ func CreateJSONResponse(g *gin.Context, httpCode, code int, data interface{}) {
 	})
 }
 
-func CreateBinResponse(g *gin.Context, code int, data interface{}) {
-	g.XML(code, data)
+func CreateBinResponse(g *gin.Context, path string) {
+	g.File(path)
 }
