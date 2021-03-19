@@ -8,6 +8,7 @@ import (
 
 	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
+	"github.com/steppbol/activity-manager/internal/middleware"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 	"github.com/steppbol/activity-manager/internal/utils/mapper"
 )
@@ -16,7 +17,7 @@ type UserRouter struct {
 	baseAPI *api.BaseAPI
 }
 
-func NewUserRouter(r *gin.Engine, ba *api.BaseAPI) {
+func NewUserRouter(r *gin.Engine, ba *api.BaseAPI, jm *middleware.JWTMiddleware) {
 	ur := UserRouter{
 		baseAPI: ba,
 	}
@@ -24,9 +25,13 @@ func NewUserRouter(r *gin.Engine, ba *api.BaseAPI) {
 	routers := r.Group("/api/v1/activity-manager")
 
 	routers.POST("/users", ur.Create)
-	routers.PUT("/users/:id", ur.Update)
-	routers.GET("/users/:id", ur.FindByID)
-	routers.DELETE("/users/:id", ur.Delete)
+
+	routers.Use(jm.JWT())
+	{
+		routers.PUT("/users/:id", ur.Update)
+		routers.GET("/users/:id", ur.FindByID)
+		routers.DELETE("/users/:id", ur.Delete)
+	}
 }
 
 func (ur UserRouter) Create(c *gin.Context) {
@@ -38,7 +43,7 @@ func (ur UserRouter) Create(c *gin.Context) {
 		return
 	}
 
-	user := ur.baseAPI.UserService.Create(input.Username, input.Password)
+	user := ur.baseAPI.UserService.Create(input.Username, input.Password, input.Email)
 	if user == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return

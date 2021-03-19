@@ -9,6 +9,9 @@ import (
 func UserUpdateRequestToMap(ur dtos.UserUpdateRequest) *map[string]interface{} {
 	m := make(map[string]interface{})
 
+	if ur.Email != "" {
+		m["email"] = ur.Email
+	}
 	if ur.Username != "" {
 		m["username"] = ur.Username
 	}

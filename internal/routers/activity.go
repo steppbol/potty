@@ -8,6 +8,7 @@ import (
 
 	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
+	"github.com/steppbol/activity-manager/internal/middleware"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 	"github.com/steppbol/activity-manager/internal/utils/mapper"
 )
@@ -16,18 +17,21 @@ type ActivityRouter struct {
 	baseAPI *api.BaseAPI
 }
 
-func NewActivityRouter(r *gin.Engine, ba *api.BaseAPI) {
+func NewActivityRouter(r *gin.Engine, ba *api.BaseAPI, jm *middleware.JWTMiddleware) {
 	dr := ActivityRouter{
 		baseAPI: ba,
 	}
 
 	routers := r.Group("/api/v1/activity-manager")
 
-	routers.POST("/activities", dr.Create)
-	routers.PUT("/activities/:id", dr.Update)
-	routers.GET("/activities", dr.FindAllByUserID)
-	routers.GET("/activities/tags", dr.FindAllByTags)
-	routers.DELETE("/activities", dr.Delete)
+	routers.Use(jm.JWT())
+	{
+		routers.POST("/activities", dr.Create)
+		routers.PUT("/activities/:id", dr.Update)
+		routers.GET("/activities", dr.FindAllByUserID)
+		routers.GET("/activities/tags", dr.FindAllByTags)
+		routers.DELETE("/activities", dr.Delete)
+	}
 }
 
 func (ar ActivityRouter) Create(c *gin.Context) {

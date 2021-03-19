@@ -1,18 +1,24 @@
 package configs
 
 import (
+	"encoding/json"
 	"io/ioutil"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/google/uuid"
 )
 
 const (
-	config = "./configs/bootstrap.yml"
+	bootstrap = "./configs/bootstrap.yml"
+	security  = "./configs/security.json"
 )
 
 type Config struct {
 	Application
 	Database
+	Server
+	Security
 }
 
 type Application struct {
@@ -21,6 +27,21 @@ type Application struct {
 
 type applicationConfig struct {
 	Application yaml.Node
+}
+
+type Server struct {
+	Mode string `yaml:"mode"`
+	Port int    `yaml:"port"`
+}
+
+type serverConfig struct {
+	Server yaml.Node
+}
+
+type Security struct {
+	Issuer             string
+	JWTExpirationDelta int
+	Secret             uuid.UUID
 }
 
 type Database struct {
@@ -39,7 +60,26 @@ type databaseConfig struct {
 }
 
 func Setup() (*Config, error) {
-	buff, err := ioutil.ReadFile(config)
+	b, err := initBootstrapSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := initSecuritySettings()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Config{
+		Application: b.Application,
+		Database:    b.Database,
+		Server:      b.Server,
+		Security:    s.Security,
+	}, nil
+}
+
+func initBootstrapSettings() (*Config, error) {
+	buff, err := ioutil.ReadFile(bootstrap)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +103,36 @@ func Setup() (*Config, error) {
 	a := Application{}
 	err = ac.Application.Decode(&a)
 
+	var sc serverConfig
+	err = yaml.Unmarshal(buff, &sc)
+
+	if err != nil {
+		return nil, err
+	}
+
+	s := Server{}
+	err = sc.Server.Decode(&s)
+
 	return &Config{
 		Application: a,
 		Database:    d,
+		Server:      s,
+	}, nil
+}
+
+func initSecuritySettings() (*Config, error) {
+	buff, err := ioutil.ReadFile(security)
+	if err != nil {
+		return nil, err
+	}
+
+	s := Security{}
+	err = json.Unmarshal(buff, &s)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Config{
+		Security: s,
 	}, nil
 }

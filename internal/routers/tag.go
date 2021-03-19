@@ -8,6 +8,7 @@ import (
 
 	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
+	"github.com/steppbol/activity-manager/internal/middleware"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 )
 
@@ -15,18 +16,21 @@ type TagRouter struct {
 	baseAPI *api.BaseAPI
 }
 
-func NewTagRouter(r *gin.Engine, ba *api.BaseAPI) {
+func NewTagRouter(r *gin.Engine, ba *api.BaseAPI, jm *middleware.JWTMiddleware) {
 	tr := TagRouter{
 		baseAPI: ba,
 	}
 
 	routers := r.Group("/api/v1/activity-manager")
 
-	routers.POST("/tags", tr.Create)
-	routers.PUT("/tags/:id", tr.Update)
-	routers.GET("/tags", tr.FindAll)
-	routers.GET("/tags/:id", tr.FindByID)
-	routers.DELETE("/tags/:id", tr.Delete)
+	routers.Use(jm.JWT())
+	{
+		routers.POST("/tags", tr.Create)
+		routers.PUT("/tags/:id", tr.Update)
+		routers.GET("/tags", tr.FindAll)
+		routers.GET("/tags/:id", tr.FindByID)
+		routers.DELETE("/tags/:id", tr.Delete)
+	}
 }
 
 func (tr TagRouter) Create(c *gin.Context) {

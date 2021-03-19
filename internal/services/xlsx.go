@@ -15,7 +15,10 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-const xlsxExtension = ".xlsx"
+const (
+	xlsxExtension = ".xlsx"
+	timeLayout    = "2006-01-02 15:04:05.999999 -0700 +03"
+)
 
 type XLSXService struct {
 	exportPath string
@@ -350,8 +353,7 @@ func (xs XLSXService) createDate(data []string, activities *[]models.Activity) (
 		return nil, err
 	}
 
-	layout := "2006-01-02 15:04:05.999999 -0700 +03"
-	cTime, err := time.Parse(layout, data[1])
+	cTime, err := time.Parse(timeLayout, data[1])
 	if err != nil {
 		return nil, err
 	}

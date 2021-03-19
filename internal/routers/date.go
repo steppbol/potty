@@ -8,6 +8,7 @@ import (
 
 	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
+	"github.com/steppbol/activity-manager/internal/middleware"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 	"github.com/steppbol/activity-manager/internal/utils/mapper"
 )
@@ -16,20 +17,23 @@ type DateRouter struct {
 	baseAPI *api.BaseAPI
 }
 
-func NewDateRouter(r *gin.Engine, ba *api.BaseAPI) {
+func NewDateRouter(r *gin.Engine, ba *api.BaseAPI, jm *middleware.JWTMiddleware) {
 	dr := DateRouter{
 		baseAPI: ba,
 	}
 
 	routers := r.Group("/api/v1/activity-manager")
 
-	routers.POST("/dates", dr.Create)
-	routers.POST("/dates/export", dr.ExportToXLSX)
-	routers.POST("/dates/import/:id", dr.ImportFromXLSX)
-	routers.PUT("/dates/:id", dr.Update)
-	routers.GET("/dates/:id", dr.FindByID)
-	routers.GET("/dates", dr.FindAllByUserID)
-	routers.DELETE("/dates", dr.Delete)
+	routers.Use(jm.JWT())
+	{
+		routers.POST("/dates", dr.Create)
+		routers.POST("/dates/export", dr.ExportToXLSX)
+		routers.POST("/dates/import/:id", dr.ImportFromXLSX)
+		routers.PUT("/dates/:id", dr.Update)
+		routers.GET("/dates/:id", dr.FindByID)
+		routers.GET("/dates", dr.FindAllByUserID)
+		routers.DELETE("/dates", dr.Delete)
+	}
 }
 
 func (dr DateRouter) Create(c *gin.Context) {
