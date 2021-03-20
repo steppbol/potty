@@ -14,3 +14,10 @@ database:
   schema: postgres
   generate-schema: false
   ssl-mode: disable
+
+cache:
+  host: 127.0.0.1
+  port: 6379
+  password:
+  max-idle: 30
+  max-active: 30

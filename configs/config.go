@@ -18,6 +18,7 @@ type Config struct {
 	Application
 	Database
 	Server
+	Cache
 	Security
 }
 
@@ -36,6 +37,18 @@ type Server struct {
 
 type serverConfig struct {
 	Server yaml.Node
+}
+
+type Cache struct {
+	Host      string `yaml:"host"`
+	Port      int    `yaml:"port"`
+	Password  string `yaml:"password"`
+	MaxIdle   int    `yaml:"max-idle"`
+	MaxActive int    `yaml:"max-active"`
+}
+
+type cacheConfig struct {
+	Cache yaml.Node
 }
 
 type Security struct {
@@ -74,6 +87,7 @@ func Setup() (*Config, error) {
 		Application: b.Application,
 		Database:    b.Database,
 		Server:      b.Server,
+		Cache:       b.Cache,
 		Security:    s.Security,
 	}, nil
 }
@@ -92,31 +106,48 @@ func initBootstrapSettings() (*Config, error) {
 
 	d := Database{}
 	err = dc.Database.Decode(&d)
+	if err != nil {
+		return nil, err
+	}
 
 	var ac applicationConfig
 	err = yaml.Unmarshal(buff, &ac)
-
 	if err != nil {
 		return nil, err
 	}
 
 	a := Application{}
 	err = ac.Application.Decode(&a)
+	if err != nil {
+		return nil, err
+	}
 
 	var sc serverConfig
 	err = yaml.Unmarshal(buff, &sc)
-
 	if err != nil {
 		return nil, err
 	}
 
 	s := Server{}
 	err = sc.Server.Decode(&s)
+	if err != nil {
+		return nil, err
+	}
+
+	var cc cacheConfig
+	err = yaml.Unmarshal(buff, &cc)
+	if err != nil {
+		return nil, err
+	}
+
+	c := Cache{}
+	err = cc.Cache.Decode(&c)
 
 	return &Config{
 		Application: a,
 		Database:    d,
 		Server:      s,
+		Cache:       c,
 	}, nil
 }
 

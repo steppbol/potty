@@ -7,27 +7,25 @@ import (
 	"github.com/steppbol/activity-manager/internal/services"
 )
 
-type BaseAPI struct {
+type XLSXBaseAPI struct {
 	TagService      *services.TagService
 	ActivityService *services.ActivityService
 	DateService     *services.DateService
-	UserService     *services.UserService
 }
 
-func NewBaseAPI(ts *services.TagService, as *services.ActivityService, ds *services.DateService, us *services.UserService) *BaseAPI {
-	return &BaseAPI{
+func NewXLSXBaseAPI(ts *services.TagService, as *services.ActivityService, ds *services.DateService) *XLSXBaseAPI {
+	return &XLSXBaseAPI{
 		TagService:      ts,
 		ActivityService: as,
 		DateService:     ds,
-		UserService:     us,
 	}
 }
 
-func (ba BaseAPI) ExportToXLSX(userId uint) (string, error) {
+func (ba XLSXBaseAPI) ExportToXLSX(userId uint) (string, error) {
 	return ba.DateService.ExportToXLSX(userId)
 }
 
-func (ba BaseAPI) ImportFromXLSX(userId uint, r io.Reader) error {
+func (ba XLSXBaseAPI) ImportFromXLSX(userId uint, r io.Reader) error {
 	dates, err := ba.DateService.ImportFromXLSX(userId, r)
 	if err != nil {
 		return err
@@ -53,6 +51,6 @@ func (ba BaseAPI) ImportFromXLSX(userId uint, r io.Reader) error {
 	return nil
 }
 
-func (ba BaseAPI) DeleteStaticData(path string) error {
+func (ba XLSXBaseAPI) DeleteStaticData(path string) error {
 	return os.Remove(path)
 }

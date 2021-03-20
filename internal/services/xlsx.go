@@ -22,13 +22,13 @@ const (
 
 type XLSXService struct {
 	exportPath string
-	config     configs.Application
+	config     *configs.Application
 }
 
 func NewXLSXService(conf *configs.Application) *XLSXService {
 	return &XLSXService{
 		exportPath: conf.XLSXExportPath,
-		config:     *conf,
+		config:     conf,
 	}
 }
 

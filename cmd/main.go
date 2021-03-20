@@ -9,6 +9,7 @@ import (
 
 	"github.com/steppbol/activity-manager/configs"
 	"github.com/steppbol/activity-manager/internal/api"
+	"github.com/steppbol/activity-manager/internal/cache"
 	"github.com/steppbol/activity-manager/internal/middleware"
 	"github.com/steppbol/activity-manager/internal/repositories"
 	"github.com/steppbol/activity-manager/internal/routers"
@@ -31,15 +32,17 @@ func main() {
 	ar := repositories.NewActivityRepository(br)
 	dr := repositories.NewDateRepository(br)
 
+	cache.NewRedisCache(&c.Cache)
+
 	xs := services.NewXLSXService(&c.Application)
 	us := services.NewUserService(ur)
 	ts := services.NewTagService(tr)
 	ds := services.NewDateService(us, xs, dr)
 	as := services.NewActivityService(ts, ds, ar)
 
-	ba := api.NewBaseAPI(ts, as, ds, us)
+	ba := api.NewXLSXBaseAPI(ts, as, ds)
 
-	jm, err := middleware.Setup(&c.Security)
+	jm, err := middleware.NewJWTMiddleware(&c.Security)
 	if err != nil {
 		panic(err)
 	}
@@ -48,11 +51,11 @@ func main() {
 
 	r := gin.New()
 
-	routers.NewUserRouter(r, ba, jm)
-	routers.NewTagRouter(r, ba, jm)
-	routers.NewDateRouter(r, ba, jm)
-	routers.NewActivityRouter(r, ba, jm)
-	routers.NewAuthenticationRouter(r, ba, jm)
+	routers.NewUserRouter(r, us, jm)
+	routers.NewTagRouter(r, ts, jm)
+	routers.NewDateRouter(r, ba, ds, jm)
+	routers.NewActivityRouter(r, as, jm)
+	routers.NewAuthenticationRouter(r, us, jm)
 
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%d", c.Server.Port),

@@ -13,7 +13,7 @@ import (
 
 type BaseRepository struct {
 	database *gorm.DB
-	config   configs.Database
+	config   *configs.Database
 }
 
 func Setup(conf *configs.Database) (*BaseRepository, error) {
@@ -54,6 +54,6 @@ func Setup(conf *configs.Database) (*BaseRepository, error) {
 
 	return &BaseRepository{
 		database: db,
-		config:   *conf,
+		config:   conf,
 	}, nil
 }

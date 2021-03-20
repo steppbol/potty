@@ -6,19 +6,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
 	"github.com/steppbol/activity-manager/internal/middleware"
+	"github.com/steppbol/activity-manager/internal/services"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 )
 
 type TagRouter struct {
-	baseAPI *api.BaseAPI
+	tagService *services.TagService
 }
 
-func NewTagRouter(r *gin.Engine, ba *api.BaseAPI, jm *middleware.JWTMiddleware) {
+func NewTagRouter(r *gin.Engine, ts *services.TagService, jm *middleware.JWTMiddleware) {
 	tr := TagRouter{
-		baseAPI: ba,
+		tagService: ts,
 	}
 
 	routers := r.Group("/api/v1/activity-manager")
@@ -42,7 +42,7 @@ func (tr TagRouter) Create(c *gin.Context) {
 		return
 	}
 
-	tag := tr.baseAPI.TagService.Create(input.Name)
+	tag := tr.tagService.Create(input.Name)
 	if tag == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
@@ -68,7 +68,7 @@ func (tr TagRouter) Update(c *gin.Context) {
 		return
 	}
 
-	tag := tr.baseAPI.TagService.Update(uint(cId), input.Name)
+	tag := tr.tagService.Update(uint(cId), input.Name)
 	if tag == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
@@ -78,7 +78,7 @@ func (tr TagRouter) Update(c *gin.Context) {
 }
 
 func (tr TagRouter) FindAll(c *gin.Context) {
-	tags := tr.baseAPI.TagService.FindAll()
+	tags := tr.tagService.FindAll()
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, tags)
 }
 
@@ -91,7 +91,7 @@ func (tr TagRouter) FindByID(c *gin.Context) {
 		return
 	}
 
-	tag, err := tr.baseAPI.TagService.FindByID(uint(cId))
+	tag, err := tr.tagService.FindByID(uint(cId))
 	if err != nil {
 		dtos.CreateJSONResponse(c, http.StatusNotFound, exception.NotFound, nil)
 		return
@@ -109,7 +109,7 @@ func (tr TagRouter) Delete(c *gin.Context) {
 		return
 	}
 
-	tr.baseAPI.TagService.DeleteByID(uint(cId))
+	tr.tagService.DeleteByID(uint(cId))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }

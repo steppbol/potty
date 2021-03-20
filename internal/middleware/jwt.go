@@ -7,6 +7,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/steppbol/activity-manager/configs"
 	"github.com/steppbol/activity-manager/internal/dtos"
@@ -24,7 +25,7 @@ type claims struct {
 	jwt.StandardClaims
 }
 
-func Setup(conf *configs.Security) (*JWTMiddleware, error) {
+func NewJWTMiddleware(conf *configs.Security) (*JWTMiddleware, error) {
 	js, err := conf.Secret.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -67,7 +68,26 @@ func (j JWTMiddleware) JWT() gin.HandlerFunc {
 	}
 }
 
-func (j JWTMiddleware) GenerateToken(username, password string) (string, error) {
+func (j JWTMiddleware) GenerateToken(username, password string) (map[string]string, error) {
+	tokens := make(map[string]string)
+
+	refreshToken, err := j.getRefreshToken(username, password)
+	if err != nil {
+		return nil, err
+	}
+
+	tokens["refreshToken"] = refreshToken
+
+	accessToken, err := j.getAccessToken(username, password)
+	if err != nil {
+		return nil, err
+	}
+	tokens["accessToken"] = accessToken
+
+	return tokens, err
+}
+
+func (j JWTMiddleware) getAccessToken(username, password string) (string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(3 * time.Hour)
 
@@ -77,6 +97,26 @@ func (j JWTMiddleware) GenerateToken(username, password string) (string, error) 
 		jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 			Issuer:    j.config.Issuer,
+		},
+	}
+
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
+	token, err := tokenClaims.SignedString(j.jwtSecret)
+
+	return token, err
+}
+
+func (j JWTMiddleware) getRefreshToken(username, password string) (string, error) {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(168 * time.Hour)
+
+	c := claims{
+		j.encodeMD5(username),
+		j.encodeMD5(password),
+		jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+			Issuer:    j.config.Issuer,
+			Id:        uuid.New().String(),
 		},
 	}
 

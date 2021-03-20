@@ -6,20 +6,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
 	"github.com/steppbol/activity-manager/internal/middleware"
+	"github.com/steppbol/activity-manager/internal/services"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 	"github.com/steppbol/activity-manager/internal/utils/mapper"
 )
 
 type UserRouter struct {
-	baseAPI *api.BaseAPI
+	userService *services.UserService
 }
 
-func NewUserRouter(r *gin.Engine, ba *api.BaseAPI, jm *middleware.JWTMiddleware) {
+func NewUserRouter(r *gin.Engine, us *services.UserService, jm *middleware.JWTMiddleware) {
 	ur := UserRouter{
-		baseAPI: ba,
+		userService: us,
 	}
 
 	routers := r.Group("/api/v1/activity-manager")
@@ -43,7 +43,7 @@ func (ur UserRouter) Create(c *gin.Context) {
 		return
 	}
 
-	user := ur.baseAPI.UserService.Create(input.Username, input.Password, input.Email)
+	user := ur.userService.Create(input.Username, input.Password, input.Email)
 	if user == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
@@ -69,7 +69,7 @@ func (ur UserRouter) Update(c *gin.Context) {
 		return
 	}
 
-	user := ur.baseAPI.UserService.Update(uint(cId), *mapper.UserUpdateRequestToMap(input))
+	user := ur.userService.Update(uint(cId), *mapper.UserUpdateRequestToMap(input))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
@@ -83,7 +83,7 @@ func (ur UserRouter) FindByID(c *gin.Context) {
 		return
 	}
 
-	user, err := ur.baseAPI.UserService.FindByID(uint(cId))
+	user, err := ur.userService.FindByID(uint(cId))
 
 	if err != nil {
 		dtos.CreateJSONResponse(c, http.StatusNotFound, exception.NotFound, nil)
@@ -102,7 +102,7 @@ func (ur UserRouter) Delete(c *gin.Context) {
 		return
 	}
 
-	ur.baseAPI.UserService.DeleteByID(uint(cId))
+	ur.userService.DeleteByID(uint(cId))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }

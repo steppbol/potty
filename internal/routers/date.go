@@ -9,17 +9,20 @@ import (
 	"github.com/steppbol/activity-manager/internal/api"
 	"github.com/steppbol/activity-manager/internal/dtos"
 	"github.com/steppbol/activity-manager/internal/middleware"
+	"github.com/steppbol/activity-manager/internal/services"
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 	"github.com/steppbol/activity-manager/internal/utils/mapper"
 )
 
 type DateRouter struct {
-	baseAPI *api.BaseAPI
+	xlsxBaseAPI *api.XLSXBaseAPI
+	dateService *services.DateService
 }
 
-func NewDateRouter(r *gin.Engine, ba *api.BaseAPI, jm *middleware.JWTMiddleware) {
+func NewDateRouter(r *gin.Engine, ba *api.XLSXBaseAPI, ds *services.DateService, jm *middleware.JWTMiddleware) {
 	dr := DateRouter{
-		baseAPI: ba,
+		xlsxBaseAPI: ba,
+		dateService: ds,
 	}
 
 	routers := r.Group("/api/v1/activity-manager")
@@ -45,7 +48,7 @@ func (dr DateRouter) Create(c *gin.Context) {
 		return
 	}
 
-	date := dr.baseAPI.DateService.Create(input.Time, input.UserID, input.Note)
+	date := dr.dateService.Create(input.Time, input.UserID, input.Note)
 	if date == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
@@ -63,7 +66,7 @@ func (dr DateRouter) ExportToXLSX(c *gin.Context) {
 		return
 	}
 
-	path, err := dr.baseAPI.ExportToXLSX(input.UserID)
+	path, err := dr.xlsxBaseAPI.ExportToXLSX(input.UserID)
 	if err != nil {
 		dtos.CreateJSONResponse(c, http.StatusInternalServerError, exception.InternalServerError, nil)
 		return
@@ -71,7 +74,7 @@ func (dr DateRouter) ExportToXLSX(c *gin.Context) {
 
 	dtos.CreateBinResponse(c, path)
 
-	_ = dr.baseAPI.DeleteStaticData(path)
+	_ = dr.xlsxBaseAPI.DeleteStaticData(path)
 }
 
 func (dr DateRouter) ImportFromXLSX(c *gin.Context) {
@@ -89,7 +92,7 @@ func (dr DateRouter) ImportFromXLSX(c *gin.Context) {
 		return
 	}
 
-	err = dr.baseAPI.ImportFromXLSX(uint(cId), file)
+	err = dr.xlsxBaseAPI.ImportFromXLSX(uint(cId), file)
 	if err != nil {
 		dtos.CreateJSONResponse(c, http.StatusInternalServerError, exception.InternalServerError, nil)
 		return
@@ -115,7 +118,7 @@ func (dr DateRouter) Update(c *gin.Context) {
 		return
 	}
 
-	user := dr.baseAPI.DateService.Update(uint(cId), *mapper.DateUpdateRequestToMap(input))
+	user := dr.dateService.Update(uint(cId), *mapper.DateUpdateRequestToMap(input))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, user)
 }
@@ -129,7 +132,7 @@ func (dr DateRouter) FindByID(c *gin.Context) {
 		return
 	}
 
-	date, err := dr.baseAPI.DateService.FindByID(uint(cId))
+	date, err := dr.dateService.FindByID(uint(cId))
 
 	if err != nil {
 		dtos.CreateJSONResponse(c, http.StatusNotFound, exception.NotFound, nil)
@@ -148,7 +151,7 @@ func (dr DateRouter) FindAllByUserID(c *gin.Context) {
 		return
 	}
 
-	date := dr.baseAPI.DateService.FindAllByUserID(input.UserID)
+	date := dr.dateService.FindAllByUserID(input.UserID)
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, date)
 }
@@ -162,7 +165,7 @@ func (dr DateRouter) Delete(c *gin.Context) {
 		return
 	}
 
-	dr.baseAPI.DateService.DeleteByID(uint(cId))
+	dr.dateService.DeleteByID(uint(cId))
 
 	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, nil)
 }
