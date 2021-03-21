@@ -6,7 +6,7 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize/v2 v2.3.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.3
-	github.com/gomodule/redigo v1.8.4
+	github.com/go-redis/redis/v8 v8.7.1
 	github.com/google/uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/tealeg/xlsx v1.0.5

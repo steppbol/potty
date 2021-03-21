@@ -7,6 +7,10 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
 type UserDTO struct {
 	Email    string `json:"email" binding:"required"`
 	Username string `json:"username" binding:"required"`

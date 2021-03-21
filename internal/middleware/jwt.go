@@ -3,6 +3,9 @@ package middleware
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -14,6 +17,25 @@ import (
 	"github.com/steppbol/activity-manager/internal/utils/exception"
 )
 
+type TokenDetail struct {
+	AccessToken            string
+	RefreshToken           string
+	AccessID               uuid.UUID
+	RefreshID              uuid.UUID
+	AccessTokenExpireDate  int64
+	RefreshTokenExpireDate int64
+}
+
+type AccessDetail struct {
+	AccessID string
+	UserID   uint
+}
+
+type RefreshDetail struct {
+	RefreshID string
+	UserID    uint
+}
+
 type JWTMiddleware struct {
 	config    *configs.Security
 	jwtSecret []byte
@@ -22,11 +44,12 @@ type JWTMiddleware struct {
 type claims struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	UserID   string `json:"user_id"`
 	jwt.StandardClaims
 }
 
 func NewJWTMiddleware(conf *configs.Security) (*JWTMiddleware, error) {
-	js, err := conf.Secret.MarshalBinary()
+	js, err := conf.JWTSecret.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -43,12 +66,12 @@ func (j JWTMiddleware) JWT() gin.HandlerFunc {
 		var data interface{}
 
 		code = exception.Success
-		token := c.Request.Header["Token"]
+		token := j.extractToken(c)
 
-		if token == nil || token[0] == "" {
+		if token == "" {
 			code = exception.Unauthorized
 		} else {
-			_, err := j.parseToken(token[0])
+			_, err := j.verifyToken(c)
 			if err != nil {
 				switch err.(*jwt.ValidationError).Errors {
 				default:
@@ -68,76 +91,164 @@ func (j JWTMiddleware) JWT() gin.HandlerFunc {
 	}
 }
 
-func (j JWTMiddleware) GenerateToken(username, password string) (map[string]string, error) {
-	tokens := make(map[string]string)
+func (j JWTMiddleware) GenerateToken(username, password string, userId uint) (*TokenDetail, error) {
+	var td TokenDetail
 
-	refreshToken, err := j.getRefreshToken(username, password)
+	err := j.getAccessToken(&td, username, password, userId)
 	if err != nil {
 		return nil, err
 	}
 
-	tokens["refreshToken"] = refreshToken
-
-	accessToken, err := j.getAccessToken(username, password)
+	err = j.getRefreshToken(&td, username, password, userId)
 	if err != nil {
 		return nil, err
 	}
-	tokens["accessToken"] = accessToken
 
-	return tokens, err
+	return &td, err
 }
 
-func (j JWTMiddleware) getAccessToken(username, password string) (string, error) {
-	nowTime := time.Now()
-	expireTime := nowTime.Add(3 * time.Hour)
-
-	c := claims{
-		j.encodeMD5(username),
-		j.encodeMD5(password),
-		jwt.StandardClaims{
-			ExpiresAt: expireTime.Unix(),
-			Issuer:    j.config.Issuer,
-		},
+func (j JWTMiddleware) ExtractAccessTokenMetadata(c *gin.Context) (*AccessDetail, error) {
+	token, err := j.verifyToken(c)
+	if err != nil {
+		return nil, err
 	}
 
-	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
-	token, err := tokenClaims.SignedString(j.jwtSecret)
+	cl, ok := token.Claims.(jwt.MapClaims)
 
-	return token, err
-}
-
-func (j JWTMiddleware) getRefreshToken(username, password string) (string, error) {
-	nowTime := time.Now()
-	expireTime := nowTime.Add(168 * time.Hour)
-
-	c := claims{
-		j.encodeMD5(username),
-		j.encodeMD5(password),
-		jwt.StandardClaims{
-			ExpiresAt: expireTime.Unix(),
-			Issuer:    j.config.Issuer,
-			Id:        uuid.New().String(),
-		},
-	}
-
-	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
-	token, err := tokenClaims.SignedString(j.jwtSecret)
-
-	return token, err
-}
-
-func (j JWTMiddleware) parseToken(token string) (*claims, error) {
-	tokenClaims, err := jwt.ParseWithClaims(token, &claims{}, func(token *jwt.Token) (interface{}, error) {
-		return j.jwtSecret, nil
-	})
-
-	if tokenClaims != nil {
-		if c, ok := tokenClaims.Claims.(*claims); ok && tokenClaims.Valid {
-			return c, nil
+	if ok && token.Valid {
+		acId, iOk := cl["access_id"].(string)
+		if !iOk {
+			return nil, err
 		}
+
+		cId, iErr := strconv.Atoi(cl["user_id"].(string))
+		if iErr != nil {
+			return nil, iErr
+		}
+
+		return &AccessDetail{
+			AccessID: acId,
+			UserID:   uint(cId),
+		}, nil
 	}
 
 	return nil, err
+}
+
+func (j JWTMiddleware) ExtractRefreshTokenMetadata(tk string) (*RefreshDetail, error) {
+	token, err := jwt.Parse(tk, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return j.config.RefreshSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, ok := token.Claims.(jwt.Claims)
+	if !ok && !token.Valid {
+		return nil, fmt.Errorf("invalid token: %v", token.Header["alg"])
+	}
+
+	cl, ok := token.Claims.(jwt.MapClaims)
+
+	var rd RefreshDetail
+
+	if ok && token.Valid {
+		refreshId, iOk := cl["refresh_id"].(string)
+		if !iOk {
+			return nil, fmt.Errorf("invalid token: %v", token.Header["alg"])
+		}
+
+		cId, iErr := strconv.Atoi(cl["user_id"].(string))
+		if iErr != nil {
+			return nil, iErr
+		}
+
+		rd.UserID = uint(cId)
+		rd.RefreshID = refreshId
+	}
+
+	return &rd, nil
+}
+
+func (j JWTMiddleware) verifyToken(c *gin.Context) (*jwt.Token, error) {
+	tokenString := j.extractToken(c)
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return j.jwtSecret, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func (j JWTMiddleware) extractToken(c *gin.Context) string {
+	token := c.Request.Header["Authorization"]
+	arg := strings.Split(token[0], " ")
+
+	if len(arg) == 2 {
+		return arg[1]
+	}
+
+	return ""
+}
+
+func (j JWTMiddleware) getAccessToken(td *TokenDetail, username, password string, userId uint) error {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(3 * time.Hour).Unix()
+
+	c := claims{
+		j.encodeMD5(username),
+		j.encodeMD5(password),
+		fmt.Sprintf("%d", userId),
+		jwt.StandardClaims{
+			ExpiresAt: expireTime,
+			Issuer:    j.config.Issuer,
+		},
+	}
+
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
+	token, err := tokenClaims.SignedString(j.jwtSecret)
+
+	td.AccessToken = token
+	td.AccessID = uuid.New()
+	td.AccessTokenExpireDate = expireTime
+
+	return err
+}
+
+func (j JWTMiddleware) getRefreshToken(td *TokenDetail, username, password string, userId uint) error {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(168 * time.Hour).Unix()
+
+	c := claims{
+		j.encodeMD5(username),
+		j.encodeMD5(password),
+		fmt.Sprintf("%d", userId),
+		jwt.StandardClaims{
+			ExpiresAt: expireTime,
+			Issuer:    j.config.Issuer,
+			Id:        fmt.Sprintf("%s_%d", td.AccessID.String(), userId),
+		},
+	}
+
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
+	token, err := tokenClaims.SignedString(j.jwtSecret)
+
+	td.RefreshToken = token
+	td.RefreshID = uuid.New()
+	td.RefreshTokenExpireDate = expireTime
+
+	return err
 }
 
 func (j JWTMiddleware) encodeMD5(value string) string {

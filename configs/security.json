@@ -1,5 +1,6 @@
 {
   "Issuer": "activity-manager",
   "JWTExpirationDelta": 3,
-  "Secret": "d89e6cd8-6089-4304-bf77-09962c62ec69"
+  "JWTSecret": "d89e6cd8-6089-4304-bf77-09962c62ec69",
+  "RefreshSecret": "71896d99-c08e-4fa7-a33a-514e77defff4"
 }

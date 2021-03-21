@@ -40,11 +40,9 @@ type serverConfig struct {
 }
 
 type Cache struct {
-	Host      string `yaml:"host"`
-	Port      int    `yaml:"port"`
-	Password  string `yaml:"password"`
-	MaxIdle   int    `yaml:"max-idle"`
-	MaxActive int    `yaml:"max-active"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Password string `yaml:"password"`
 }
 
 type cacheConfig struct {
@@ -54,7 +52,8 @@ type cacheConfig struct {
 type Security struct {
 	Issuer             string
 	JWTExpirationDelta int
-	Secret             uuid.UUID
+	JWTSecret          uuid.UUID
+	RefreshSecret      uuid.UUID
 }
 
 type Database struct {
@@ -73,97 +72,92 @@ type databaseConfig struct {
 }
 
 func Setup() (*Config, error) {
-	b, err := initBootstrapSettings()
+	var config Config
+	err := initBootstrapSettings(&config)
 	if err != nil {
 		return nil, err
 	}
 
-	s, err := initSecuritySettings()
+	err = initSecuritySettings(&config)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Config{
-		Application: b.Application,
-		Database:    b.Database,
-		Server:      b.Server,
-		Cache:       b.Cache,
-		Security:    s.Security,
-	}, nil
+	return &config, nil
 }
 
-func initBootstrapSettings() (*Config, error) {
+func initBootstrapSettings(config *Config) error {
 	buff, err := ioutil.ReadFile(bootstrap)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var dc databaseConfig
 	err = yaml.Unmarshal(buff, &dc)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	d := Database{}
 	err = dc.Database.Decode(&d)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var ac applicationConfig
 	err = yaml.Unmarshal(buff, &ac)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	a := Application{}
 	err = ac.Application.Decode(&a)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var sc serverConfig
 	err = yaml.Unmarshal(buff, &sc)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	s := Server{}
 	err = sc.Server.Decode(&s)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var cc cacheConfig
 	err = yaml.Unmarshal(buff, &cc)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	c := Cache{}
 	err = cc.Cache.Decode(&c)
 
-	return &Config{
-		Application: a,
-		Database:    d,
-		Server:      s,
-		Cache:       c,
-	}, nil
+	config.Application = a
+	config.Database = d
+	config.Server = s
+	config.Cache = c
+
+	return nil
 }
 
-func initSecuritySettings() (*Config, error) {
+func initSecuritySettings(config *Config) error {
 	buff, err := ioutil.ReadFile(security)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	s := Security{}
 	err = json.Unmarshal(buff, &s)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &Config{
-		Security: s,
-	}, nil
+	config.Security = s
+
+	return nil
 }

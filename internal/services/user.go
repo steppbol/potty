@@ -56,23 +56,23 @@ func (us UserService) DeleteByID(id uint) {
 	us.userRepository.DeleteByID(id)
 }
 
-func (us UserService) CheckUser(username, password string) bool {
+func (us UserService) CheckUser(username, password string) (bool, *models.User) {
 	user, _ := us.FindByUsername(username)
 	if user.ID == 0 {
-		return false
+		return false, nil
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return false
+		return false, nil
 	}
 
 	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
 	if err != nil {
-		return false
+		return false, nil
 	}
 
-	return true
+	return true, user
 }
 
 func (us UserService) createUser(username, password, email string) *models.User {

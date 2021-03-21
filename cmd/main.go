@@ -32,13 +32,15 @@ func main() {
 	ar := repositories.NewActivityRepository(br)
 	dr := repositories.NewDateRepository(br)
 
-	cache.NewRedisCache(&c.Cache)
-
 	xs := services.NewXLSXService(&c.Application)
 	us := services.NewUserService(ur)
 	ts := services.NewTagService(tr)
 	ds := services.NewDateService(us, xs, dr)
 	as := services.NewActivityService(ts, ds, ar)
+
+	rc := cache.NewRedisCache(&c.Cache)
+
+	auths := services.NewAuthenticationService(rc)
 
 	ba := api.NewXLSXBaseAPI(ts, as, ds)
 
@@ -55,7 +57,7 @@ func main() {
 	routers.NewTagRouter(r, ts, jm)
 	routers.NewDateRouter(r, ba, ds, jm)
 	routers.NewActivityRouter(r, as, jm)
-	routers.NewAuthenticationRouter(r, us, jm)
+	routers.NewAuthenticationRouter(r, us, auths, jm)
 
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%d", c.Server.Port),
