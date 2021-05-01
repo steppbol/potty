@@ -6,16 +6,16 @@ server:
   port: 8081
 
 database:
-  host: 127.0.0.1
+  host: postgres
   port: 5432
   user: postgres
   password: postgres
   name: sandbox
   schema: postgres
-  generate-schema: false
+  generate-schema: true
   ssl-mode: disable
 
 cache:
-  host: 127.0.0.1
+  host: redis
   port: 6379
   password:

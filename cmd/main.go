@@ -52,6 +52,7 @@ func main() {
 	gin.SetMode(c.Server.Mode)
 
 	r := gin.New()
+	r.Use(CORS())
 
 	routers.NewUserRouter(r, us, jm)
 	routers.NewTagRouter(r, ts, jm)
@@ -71,5 +72,21 @@ func main() {
 
 	if err != nil {
 		panic(err)
+	}
+}
+
+func CORS() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "*")
+
+		if c.Request.Method == http.MethodOptions {
+			c.Writer.WriteHeader(http.StatusOK)
+			return
+		}
+
+		c.Next()
+		return
 	}
 }
