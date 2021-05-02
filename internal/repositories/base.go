@@ -3,7 +3,6 @@ package repositories
 import (
 	"fmt"
 	"net/url"
-	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -25,8 +24,6 @@ func Setup(conf *configs.Database) (*BaseRepository, error) {
 		Path:     conf.Name,
 		RawQuery: (&url.Values{"sslmode": []string{conf.SSLMode}}).Encode(),
 	}
-
-	time.Sleep(5 * time.Second)
 
 	db, err := gorm.Open(postgres.Open(dsn.String()), &gorm.Config{})
 	if err != nil {
