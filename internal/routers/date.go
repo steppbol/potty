@@ -74,7 +74,7 @@ func (dr DateRouter) ExportToXLSX(c *gin.Context) {
 
 	dtos.CreateBinResponse(c, path)
 
-	_ = dr.xlsxBaseAPI.DeleteStaticData(path)
+	// _ = dr.xlsxBaseAPI.DeleteStaticData(path)
 }
 
 func (dr DateRouter) ImportFromXLSX(c *gin.Context) {

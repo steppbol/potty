@@ -23,6 +23,8 @@ services:
       - postgres
       - redis
     build: .
+    volumes:
+    - ./export:/app/export
     ports:
     - "8081:8081"
     networks:

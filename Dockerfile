@@ -9,6 +9,4 @@ FROM golang:1.16-alpine
 COPY --from=builder /app /app
 WORKDIR /app
 
-#EXPOSE 8081
-
 CMD ["/app/activity-manager"]
