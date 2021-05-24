@@ -68,7 +68,7 @@ func (ds DateService) DeleteByID(id uint) {
 	ds.dateRepository.DeleteByID(id)
 }
 
-func (ds DateService) ExportToXLSX(userId uint) (string, error) {
+func (ds DateService) ExportToXLSX(userId uint, from, to *time.Time) (string, error) {
 	user, err := ds.userService.FindByID(userId)
 	if err != nil {
 		return "", nil
@@ -76,7 +76,7 @@ func (ds DateService) ExportToXLSX(userId uint) (string, error) {
 
 	dates := ds.FindAllByUserIDAndNotDeleted(userId)
 
-	return ds.xlsxService.Export(user.Username, *dates)
+	return ds.xlsxService.Export(user.Username, *ds.getDatesBetween(*dates, from, to))
 }
 
 func (ds DateService) ImportFromXLSX(userId uint, r io.Reader) (*[]models.Date, error) {
@@ -94,4 +94,32 @@ func (ds DateService) createDate(time time.Time, userId uint, note string) *mode
 		Note:   note,
 		UserID: userId,
 	}
+}
+
+func (ds DateService) getDatesBetween(dates []models.Date, from, to *time.Time) *[]models.Date {
+	uDates := make([]models.Date, 0)
+
+	if from != nil && to != nil {
+		for i := range dates {
+			if dates[i].Time.After(*from) && dates[i].Time.Before(*to) {
+				uDates = append(uDates, dates[i])
+			}
+		}
+	} else if from != nil {
+		for i := range dates {
+			if dates[i].Time.After(*from) {
+				uDates = append(uDates, dates[i])
+			}
+		}
+	} else if to != nil {
+		for i := range dates {
+			if dates[i].Time.Before(*to) {
+				uDates = append(uDates, dates[i])
+			}
+		}
+	} else {
+		uDates = dates
+	}
+
+	return &uDates
 }

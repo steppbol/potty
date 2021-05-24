@@ -3,6 +3,7 @@ package api
 import (
 	"io"
 	"os"
+	"time"
 
 	"github.com/steppbol/activity-manager/internal/services"
 )
@@ -21,8 +22,8 @@ func NewXLSXBaseAPI(ts *services.TagService, as *services.ActivityService, ds *s
 	}
 }
 
-func (ba XLSXBaseAPI) ExportToXLSX(userId uint) (string, error) {
-	return ba.DateService.ExportToXLSX(userId)
+func (ba XLSXBaseAPI) ExportToXLSX(userId uint, from, to time.Time) (string, error) {
+	return ba.DateService.ExportToXLSX(userId, &from, &to)
 }
 
 func (ba XLSXBaseAPI) ImportFromXLSX(userId uint, r io.Reader) error {

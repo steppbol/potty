@@ -60,7 +60,7 @@ func (dr DateRouter) Create(c *gin.Context) {
 }
 
 func (dr DateRouter) ExportToXLSX(c *gin.Context) {
-	var input dtos.UserIDRequest
+	var input dtos.ExportToXLSXRequest
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
@@ -68,7 +68,7 @@ func (dr DateRouter) ExportToXLSX(c *gin.Context) {
 		return
 	}
 
-	path, err := dr.xlsxBaseAPI.ExportToXLSX(input.UserID)
+	path, err := dr.xlsxBaseAPI.ExportToXLSX(input.UserID, input.StartDate, input.EndDate)
 	if err != nil {
 		dtos.CreateJSONResponse(c, http.StatusInternalServerError, exception.InternalServerError, nil)
 		return

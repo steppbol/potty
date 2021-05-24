@@ -71,6 +71,11 @@ type TagDTO struct {
 type UserIDRequest struct {
 	UserID uint `json:"user_id" binding:"required"`
 }
+type ExportToXLSXRequest struct {
+	UserID    uint      `json:"user_id" binding:"required"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+}
 
 type FindByTagsRequest struct {
 	UserID uint   `json:"user_id" binding:"required"`
