@@ -27,6 +27,8 @@ func NewDateRouter(r *gin.Engine, ba *api.XLSXBaseAPI, ds *services.DateService,
 
 	routers := r.Group("/api/v1/activity-manager")
 
+	routers.Use(jm.CORS())
+
 	routers.Use(jm.JWT())
 	{
 		routers.POST("/dates", dr.Create)

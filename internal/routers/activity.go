@@ -24,9 +24,12 @@ func NewActivityRouter(r *gin.Engine, as *services.ActivityService, jm *middlewa
 
 	routers := r.Group("/api/v1/activity-manager")
 
+	routers.Use(jm.CORS())
+
 	routers.Use(jm.JWT())
 	{
 		routers.POST("/activities", dr.Create)
+		routers.POST("/activities/strict", dr.CreateWithDateID)
 		routers.PUT("/activities/:id", dr.Update)
 		routers.GET("/activities", dr.FindAllByUserID)
 		routers.GET("/activities/tags", dr.FindAllByTags)
@@ -43,7 +46,25 @@ func (ar ActivityRouter) Create(c *gin.Context) {
 		return
 	}
 
-	activity := ar.activityService.Create(input.Title, input.Description, input.Content, input.DateID, input.TagIDs)
+	activity := ar.activityService.Create(input.Username, input.Title, input.Description, input.Content, input.Date, input.TagIDs)
+	if activity == nil {
+		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
+		return
+	}
+
+	dtos.CreateJSONResponse(c, http.StatusOK, exception.Success, activity)
+}
+
+func (ar ActivityRouter) CreateWithDateID(c *gin.Context) {
+	var input dtos.ActivityWithDateIDDTO
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		dtos.CreateJSONResponse(c, http.StatusBadRequest, exception.BadRequest, nil)
+		return
+	}
+
+	activity := ar.activityService.CreateWithDateID(input.Title, input.Description, input.Content, input.DateID, input.TagIDs)
 	if activity == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return

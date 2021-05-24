@@ -44,7 +44,7 @@ func (ba XLSXBaseAPI) ImportFromXLSX(userId uint, r io.Reader) error {
 				cTags = append(cTags, tag.ID)
 			}
 
-			ba.ActivityService.Create(activity.Title, activity.Description, activity.Content, cDate.ID, cTags)
+			ba.ActivityService.CreateWithDateID(activity.Title, activity.Description, activity.Content, cDate.ID, cTags)
 		}
 	}
 

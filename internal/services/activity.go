@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/steppbol/activity-manager/internal/models"
 	"github.com/steppbol/activity-manager/internal/repositories"
 )
@@ -9,17 +11,39 @@ type ActivityService struct {
 	activityRepository *repositories.ActivityRepository
 	tagService         *TagService
 	dateService        *DateService
+	userService        *UserService
 }
 
-func NewActivityService(ts *TagService, ds *DateService, ar *repositories.ActivityRepository) *ActivityService {
+func NewActivityService(ts *TagService, ds *DateService, us *UserService, ar *repositories.ActivityRepository) *ActivityService {
 	return &ActivityService{
 		activityRepository: ar,
 		tagService:         ts,
 		dateService:        ds,
+		userService:        us,
 	}
 }
 
-func (as ActivityService) Create(title, description, content string, dateId uint, tagIds []uint) *models.Activity {
+func (as ActivityService) Create(username, title, description, content string, date time.Time, tagIds []uint) *models.Activity {
+	user, _ := as.userService.FindByUsername(username)
+	if user.ID == 0 {
+		return nil
+	}
+
+	fDate, _ := as.dateService.FindByTimeAndUserID(user.ID, date)
+
+	cDate := fDate
+	if fDate.ID == 0 {
+		cDate = as.dateService.Create(date, user.ID, "")
+	}
+
+	tags := as.tagService.FindAllByIDs(tagIds)
+	activity := as.createActivity(title, description, content, cDate.ID, *tags)
+
+	as.activityRepository.Create(activity)
+	return activity
+}
+
+func (as ActivityService) CreateWithDateID(title, description, content string, dateId uint, tagIds []uint) *models.Activity {
 	_, err := as.dateService.FindByID(dateId)
 	if err != nil {
 		return nil

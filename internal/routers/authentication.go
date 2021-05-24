@@ -26,6 +26,8 @@ func NewAuthenticationRouter(r *gin.Engine, us *services.UserService, as *servic
 
 	routers := r.Group("/api/v1/activity-manager/authentication")
 
+	routers.Use(jm.CORS())
+
 	routers.POST("/login", dr.Login)
 	routers.POST("/refresh", dr.Refresh)
 

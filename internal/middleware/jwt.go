@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -58,6 +59,22 @@ func NewJWTMiddleware(conf *configs.Security) (*JWTMiddleware, error) {
 		config:    conf,
 		jwtSecret: js,
 	}, nil
+}
+
+func (j JWTMiddleware) CORS() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "*")
+
+		if c.Request.Method == http.MethodOptions {
+			c.Writer.WriteHeader(http.StatusOK)
+			return
+		}
+
+		c.Next()
+		return
+	}
 }
 
 func (j JWTMiddleware) JWT() gin.HandlerFunc {

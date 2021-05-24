@@ -23,6 +23,8 @@ func NewTagRouter(r *gin.Engine, ts *services.TagService, jm *middleware.JWTMidd
 
 	routers := r.Group("/api/v1/activity-manager")
 
+	routers.Use(jm.CORS())
+
 	routers.Use(jm.JWT())
 	{
 		routers.POST("/tags", tr.Create)

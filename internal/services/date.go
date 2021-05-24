@@ -28,7 +28,7 @@ func (ds DateService) Create(time time.Time, userId uint, note string) *models.D
 		return nil
 	}
 
-	fDate, _ := ds.dateRepository.FindAllByTimeAndUserID(userId, time)
+	fDate, _ := ds.FindByTimeAndUserID(userId, time)
 	if fDate.ID != 0 {
 		return nil
 	}
@@ -54,6 +54,10 @@ func (ds DateService) FindAllByUserID(userId uint) *[]models.Date {
 
 func (ds DateService) FindAllByUserIDAndNotDeleted(userId uint) *[]models.Date {
 	return ds.dateRepository.FindAllByUserIDAndNotDeleted(userId)
+}
+
+func (ds DateService) FindByTimeAndUserID(userId uint, time time.Time) (*models.Date, error) {
+	return ds.dateRepository.FindByTimeAndUserID(userId, time)
 }
 
 func (ds DateService) FindByID(id uint) (*models.Date, error) {

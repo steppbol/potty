@@ -34,12 +34,21 @@ type DateUpdateRequest struct {
 	Note string    `json:"note"`
 }
 
-type ActivityDTO struct {
+type ActivityWithDateIDDTO struct {
 	Title       string `json:"title" binding:"required"`
 	Description string `json:"description"`
 	Content     string `json:"content" binding:"required"`
 	DateID      uint   `json:"date_id" binding:"required"`
 	TagIDs      []uint `json:"tag_ids"`
+}
+
+type ActivityDTO struct {
+	Username    string    `json:"username" binding:"required"`
+	Title       string    `json:"title" binding:"required"`
+	Description string    `json:"description"`
+	Content     string    `json:"content" binding:"required"`
+	Date        time.Time `json:"date" binding:"required"`
+	TagIDs      []uint    `json:"tag_ids"`
 }
 
 type ActivityUpdateRequest struct {

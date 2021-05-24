@@ -26,6 +26,8 @@ func NewUserRouter(r *gin.Engine, us *services.UserService, jm *middleware.JWTMi
 
 	routers.POST("/users", ur.Create)
 
+	routers.Use(jm.CORS())
+
 	routers.Use(jm.JWT())
 	{
 		routers.PUT("/users/:id", ur.Update)

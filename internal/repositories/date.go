@@ -40,7 +40,7 @@ func (dr DateRepository) FindAllByUserIDAndNotDeleted(userId uint) *[]models.Dat
 	return &dates
 }
 
-func (dr DateRepository) FindAllByTimeAndUserID(userId uint, time time.Time) (*models.Date, error) {
+func (dr DateRepository) FindByTimeAndUserID(userId uint, time time.Time) (*models.Date, error) {
 	var date models.Date
 
 	err := dr.baseRepository.database.Where("user_id = ? AND time = ?", userId, time).Preload("Activities.Tags").First(&date).Error
