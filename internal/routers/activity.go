@@ -46,7 +46,9 @@ func (ar ActivityRouter) Create(c *gin.Context) {
 		return
 	}
 
-	activity := ar.activityService.Create(input.Username, input.Title, input.Description, input.Content, input.Date, input.TagIDs)
+	cActivity := mapper.ActivityDTOToActivity(input)
+
+	activity := ar.activityService.Create(*cActivity, input.Username, input.Date, input.TagIDs)
 	if activity == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return
@@ -64,7 +66,9 @@ func (ar ActivityRouter) CreateWithDateID(c *gin.Context) {
 		return
 	}
 
-	activity := ar.activityService.CreateWithDateID(input.Title, input.Description, input.Content, input.DateID, input.TagIDs)
+	cActivity := mapper.ActivityWithDateIDDTOToActivity(input)
+
+	activity := ar.activityService.CreateWithDateID(*cActivity, input.TagIDs)
 	if activity == nil {
 		dtos.CreateJSONResponse(c, http.StatusConflict, exception.Conflict, nil)
 		return

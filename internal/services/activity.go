@@ -23,7 +23,7 @@ func NewActivityService(ts *TagService, ds *DateService, us *UserService, ar *re
 	}
 }
 
-func (as ActivityService) Create(username, title, description, content string, date time.Time, tagIds []uint) *models.Activity {
+func (as ActivityService) Create(activity models.Activity, username string, date time.Time, tagIds []uint) *models.Activity {
 	user, _ := as.userService.FindByUsername(username)
 	if user.ID == 0 {
 		return nil
@@ -37,23 +37,23 @@ func (as ActivityService) Create(username, title, description, content string, d
 	}
 
 	tags := as.tagService.FindAllByIDs(tagIds)
-	activity := as.createActivity(title, description, content, cDate.ID, *tags)
+	cActivity := as.createActivity(activity, cDate.ID, *tags)
 
-	as.activityRepository.Create(activity)
-	return activity
+	as.activityRepository.Create(cActivity)
+	return cActivity
 }
 
-func (as ActivityService) CreateWithDateID(title, description, content string, dateId uint, tagIds []uint) *models.Activity {
-	_, err := as.dateService.FindByID(dateId)
+func (as ActivityService) CreateWithDateID(activity models.Activity, tagIds []uint) *models.Activity {
+	_, err := as.dateService.FindByID(activity.DateID)
 	if err != nil {
 		return nil
 	}
 
 	tags := as.tagService.FindAllByIDs(tagIds)
-	activity := as.createActivity(title, description, content, dateId, *tags)
+	cActivity := as.createActivity(activity, activity.DateID, *tags)
 
-	as.activityRepository.Create(activity)
-	return activity
+	as.activityRepository.Create(cActivity)
+	return cActivity
 }
 
 func (as ActivityService) Update(id uint, update map[string]interface{}) *models.Activity {
@@ -74,6 +74,12 @@ func (as ActivityService) Update(id uint, update map[string]interface{}) *models
 	if len(update["tag_ids"].([]uint)) > 0 {
 		activity.Tags = *as.tagService.FindAllByIDs(update["tag_ids"].([]uint))
 	}
+	if update["place"].(string) != "" {
+		activity.Place = update["place"].(string)
+	}
+	if update["price"].(string) != "" {
+		activity.Price = update["price"].(string)
+	}
 
 	as.activityRepository.Update(activity)
 	return activity
@@ -91,11 +97,13 @@ func (as ActivityService) DeleteByID(id uint) {
 	as.activityRepository.DeleteByID(id)
 }
 
-func (as ActivityService) createActivity(title, description, content string, dateId uint, tags []models.Tag) *models.Activity {
+func (as ActivityService) createActivity(activity models.Activity, dateId uint, tags []models.Tag) *models.Activity {
 	return &models.Activity{
-		Title:       title,
-		Description: description,
-		Content:     content,
+		Title:       activity.Title,
+		Description: activity.Description,
+		Content:     activity.Content,
+		Place:       activity.Place,
+		Price:       activity.Price,
 		DateID:      dateId,
 		Tags:        tags,
 	}

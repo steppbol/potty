@@ -38,6 +38,8 @@ type ActivityWithDateIDDTO struct {
 	Title       string `json:"title" binding:"required"`
 	Description string `json:"description"`
 	Content     string `json:"content" binding:"required"`
+	Place       string `json:"place"`
+	Price       string `json:"price"`
 	DateID      uint   `json:"date_id" binding:"required"`
 	TagIDs      []uint `json:"tag_ids"`
 }
@@ -47,6 +49,8 @@ type ActivityDTO struct {
 	Title       string    `json:"title" binding:"required"`
 	Description string    `json:"description"`
 	Content     string    `json:"content" binding:"required"`
+	Place       string    `json:"place"`
+	Price       string    `json:"price"`
 	Date        time.Time `json:"date" binding:"required"`
 	TagIDs      []uint    `json:"tag_ids"`
 }
@@ -55,6 +59,8 @@ type ActivityUpdateRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Content     string `json:"content"`
+	Place       string `json:"place"`
+	Price       string `json:"price"`
 	TagIDs      []uint `json:"tag_ids"`
 }
 

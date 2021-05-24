@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/steppbol/activity-manager/internal/dtos"
+	"github.com/steppbol/activity-manager/internal/models"
 )
 
 func UserUpdateRequestToMap(ur dtos.UserUpdateRequest) *map[string]interface{} {
@@ -49,8 +50,35 @@ func ActivityUpdateRequestToMap(ar dtos.ActivityUpdateRequest) *map[string]inter
 		m["content"] = ar.Content
 	}
 	if len(ar.TagIDs) > 0 {
-		m["tag_ids"] = ar.Content
+		m["tag_ids"] = ar.TagIDs
+	}
+	if ar.Place != "" {
+		m["place"] = ar.Place
+	}
+	if ar.Price != "" {
+		m["price"] = ar.Price
 	}
 
 	return &m
+}
+
+func ActivityDTOToActivity(a dtos.ActivityDTO) *models.Activity {
+	return &models.Activity{
+		Title:       a.Title,
+		Description: a.Description,
+		Content:     a.Content,
+		Place:       a.Place,
+		Price:       a.Price,
+	}
+}
+
+func ActivityWithDateIDDTOToActivity(a dtos.ActivityWithDateIDDTO) *models.Activity {
+	return &models.Activity{
+		Title:       a.Title,
+		Description: a.Description,
+		Content:     a.Content,
+		Place:       a.Place,
+		Price:       a.Price,
+		DateID:      a.DateID,
+	}
 }
